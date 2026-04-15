@@ -12,7 +12,6 @@
             height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* 👑 개선된 상단 타이틀 & 학급 선택 바 */
         #title-bar {
             display: flex; justify-content: center; align-items: center; gap: 20px;
             padding: 16px 30px; background: rgba(255,255,255,0.4); backdrop-filter: blur(10px);
@@ -20,24 +19,21 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.03);
         }
         #title-text { font-size: 1.4rem; font-weight: 900; color: #546e7a; letter-spacing: 1px; }
-        #room-selector { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.7); padding: 5px 10px; border-radius: 12px; border: 1.5px solid rgba(142,197,252,0.8);}
-        #room-selector select { border: none; font-size: 1.1rem; font-weight: 700; color: #1565c0; background: transparent; cursor: pointer; outline: none; font-family: 'Noto Sans KR', sans-serif;}
+        #room-selector { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.7); padding: 5px 10px; border-radius: 12px; border: 1.5px solid rgba(142,197,252,0.8); }
+        #room-selector select { border: none; font-size: 1.1rem; font-weight: 700; color: #1565c0; background: transparent; cursor: pointer; outline: none; font-family: 'Noto Sans KR', sans-serif; }
 
-        /* 메인 영역 */
         #main { flex: 1; display: flex; align-items: stretch; padding: 0 30px 20px; gap: 24px; min-height: 0; }
 
-        /* 좌측: 시계 (크기 조정) */
         #left { flex: 1.1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         #clock { font-size: clamp(4rem, 8vw, 7rem); font-weight: 900; color: #37474f; text-shadow: 2px 4px 12px rgba(0,0,0,0.1); letter-spacing: -1px; line-height: 1; }
         #date-label { margin-top: 14px; font-size: 1.3rem; color: #78909c; font-weight: 700; }
 
-        /* 우측: 시간표 */
         #right { flex: 0.85; display: flex; flex-direction: column; justify-content: center; padding: 20px 0; }
-        #schedule-title { font-size: 1.2rem; font-weight: 900; color: #546e7a; margin-bottom: 12px; display:flex; justify-content: space-between;}
+        #schedule-title { font-size: 1.2rem; font-weight: 900; color: #546e7a; margin-bottom: 12px; display: flex; justify-content: space-between; }
         #today-day { color: #1976d2; }
         
         .period-row { display: flex; align-items: center; padding: 12px 18px; border-radius: 14px; margin-bottom: 8px; transition: all 0.3s; background: rgba(255,255,255,0.45); border: 1.5px solid rgba(255,255,255,0.6); }
-        .period-row.current { background: rgba(142,197,252,0.55); border-color: rgba(142,197,252,0.9); box-shadow: 0 4px 16px rgba(142,197,252,0.35); transform: scale(1.02);}
+        .period-row.current { background: rgba(142,197,252,0.55); border-color: rgba(142,197,252,0.9); box-shadow: 0 4px 16px rgba(142,197,252,0.35); transform: scale(1.02); }
         .period-row.past { opacity: 0.42; }
         .period-num { font-size: 0.9rem; font-weight: 700; color: #78909c; width: 48px; flex-shrink: 0; }
         .period-row.current .period-num { color: #1565c0; }
@@ -48,19 +44,50 @@
         .now-badge { display: none; background: #1976d2; color: white; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-left: 10px; flex-shrink: 0; }
         .period-row.current .now-badge { display: inline-block; }
 
-        /* 토스트 & 풀스크린 CSS 유지 */
-        #toast { position: fixed; bottom: 36px; right: 36px; background: rgba(255,255,255,0.85); backdrop-filter: blur(15px); color: #333; padding: 26px 32px; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.9); border-left: 10px solid #8ec5fc; display: none; z-index: 1000; min-width: 260px; }
+        /* 토스트 (수업 중 호출) */
+        #toast {
+            position: fixed; bottom: 36px; right: 36px;
+            background: rgba(255,255,255,0.85); backdrop-filter: blur(15px);
+            color: #333; padding: 26px 32px; border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.9);
+            border-left: 10px solid #8ec5fc; display: none; z-index: 1000; min-width: 260px;
+        }
         #toast.show { animation: slideUp 0.45s ease-out; }
+        #toast.notice-style { border-left-color: #ffa726; }
         @keyframes slideUp { from { transform: translateY(80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        #overlay { position: fixed; inset: 0; background: rgba(255,107,107,0.88); backdrop-filter: blur(15px); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; animation: gentleBlink 2s infinite; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        /* 풀스크린 오버레이 (쉬는 시간 호출) */
+        #overlay {
+            position: fixed; inset: 0; background: rgba(255,107,107,0.88);
+            backdrop-filter: blur(15px); display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 2000;
+            animation: gentleBlink 2s infinite; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        #overlay.notice-overlay { background: rgba(255,160,50,0.88); animation: noticeBlink 2s infinite; }
         @keyframes gentleBlink { 0%,100% { background: rgba(255,107,107,0.88); } 50% { background: rgba(255,140,140,0.92); } }
+        @keyframes noticeBlink { 0%,100% { background: rgba(255,160,50,0.88); } 50% { background: rgba(255,180,80,0.92); } }
         #overlay h1 { font-size: clamp(4rem, 10vw, 8rem); margin: 0; }
         #overlay p { font-size: clamp(1.5rem, 3.5vw, 3rem); margin-top: 12px; }
-        #overlay button { margin-top: 50px; padding: 22px 64px; font-size: 2rem; border-radius: 50px; border: 2px solid rgba(255,255,255,0.8); background: rgba(255,255,255,0.3); color: white; cursor: pointer; font-weight: bold; font-family: 'Noto Sans KR', sans-serif; backdrop-filter: blur(5px); transition: 0.3s; }
+        #overlay button {
+            margin-top: 50px; padding: 22px 64px; font-size: 2rem; border-radius: 50px;
+            border: 2px solid rgba(255,255,255,0.8); background: rgba(255,255,255,0.3);
+            color: white; cursor: pointer; font-weight: bold; font-family: 'Noto Sans KR', sans-serif;
+            backdrop-filter: blur(5px); transition: 0.3s;
+        }
         #overlay button:hover { background: rgba(255,255,255,0.5); transform: scale(1.05); }
 
-        #unlock-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(10px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: white; cursor: pointer; }
+        /* 소리 꺼짐 안내 */
+        #sound-off-badge {
+            position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.55); color: white; font-size: 0.85rem; font-weight: 700;
+            padding: 6px 18px; border-radius: 20px; display: none; z-index: 3000;
+        }
+
+        #unlock-screen {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; color: white; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -94,20 +121,25 @@
     </div>
 </div>
 
+<!-- 토스트 -->
 <div id="toast">
-    <h2 style="margin:0 0 10px; color:#4a90e2; font-size:1.05rem;">🔔 학생 호출</h2>
+    <h2 style="margin:0 0 10px; color:#4a90e2; font-size:1.05rem;" id="t-title">🔔 학생 호출</h2>
     <div id="t-students" style="font-size:1.4rem; font-weight:bold; line-height:1.6;"></div>
     <div id="t-errand" style="font-size:1.1rem; color:#607d8b; margin-top:6px;"></div>
 </div>
 
+<!-- 풀스크린 오버레이 -->
 <div id="overlay">
     <div id="f-students" style="font-size:clamp(3rem,8vw,7rem); font-weight:900; margin:0; line-height:1.2; text-align:center;"></div>
     <div id="f-errand" style="font-size:clamp(1.5rem,3.5vw,2.8rem); margin-top:16px; opacity:0.95;"></div>
     <button onclick="clearCall()">네, 확인했습니다!</button>
 </div>
 
+<!-- 소리 꺼짐 배지 -->
+<div id="sound-off-badge">🔇 알림음 종료 (화면은 유지 중)</div>
+
 <audio id="snd-toast" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
-<audio id="snd-full" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" loop></audio>
+<audio id="snd-full" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3"></audio>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -127,7 +159,9 @@ const db = firebase.database();
 const SCHOOL_STRUCTURE = { '1': 5, '2': 6, '3': 6 };
 let roomId = localStorage.getItem('rcv-room') || '3-6';
 let callListenerRef = null, scheduleListenerRef = null;
+let soundOffTimer = null, toastTimer = null;
 
+// ─── 학급 선택 ───
 function updateRcvClassOptions() {
     const grade = document.getElementById('rcv-grade').value;
     const maxClass = SCHOOL_STRUCTURE[grade] || 6;
@@ -137,7 +171,7 @@ function updateRcvClassOptions() {
     for (let i = 1; i <= maxClass; i++) {
         sel.innerHTML += `<option value="${i}" ${i == savedCls ? 'selected':''}>${i}반</option>`;
     }
-    applyRoomChange(); // 옵션 바뀌면 즉시 적용
+    applyRoomChange();
 }
 
 function applyRoomChange() {
@@ -157,7 +191,7 @@ function unlockAudio() {
     document.getElementById('unlock-screen').style.display = 'none';
 }
 
-// ── 시간표 로직 ──
+// ─── 시계 & 시간표 ───
 let fullWeeklySchedule = {};
 let todaySchedule = [];
 const DAYS = ['일','월','화','수','목','금','토'];
@@ -179,21 +213,18 @@ function getStatus(item) {
 }
 
 function extractTodaySchedule() {
-    let dayIdx = new Date().getDay(); // 0:일, 1:월 ~ 5:금, 6:토
-    if (dayIdx === 0 || dayIdx === 6) dayIdx = 1; // 주말엔 기본적으로 월요일 표시
+    let dayIdx = new Date().getDay();
+    if (dayIdx === 0 || dayIdx === 6) dayIdx = 1;
     document.getElementById('today-day').textContent = `[${DAYS[dayIdx]}요일]`;
-    
-    // 이전 버전 호환성 (배열형태)
-    if(Array.isArray(fullWeeklySchedule)) todaySchedule = fullWeeklySchedule;
+    if (Array.isArray(fullWeeklySchedule)) todaySchedule = fullWeeklySchedule;
     else todaySchedule = fullWeeklySchedule[dayIdx] || [];
-    
     renderSchedule();
 }
 
 function renderSchedule() {
     const container = document.getElementById('schedule-list');
     if (!todaySchedule || todaySchedule.length === 0) {
-        container.innerHTML = '<div style="color:#90a4ae; padding:10px 0;">시간표 정보가 없습니다 (센더에서 설정 필요)</div>';
+        container.innerHTML = '<div style="color:#90a4ae; padding:10px 0;">시간표 정보가 없습니다</div>';
         return;
     }
     container.innerHTML = todaySchedule.map(item => `
@@ -221,13 +252,34 @@ function getMode() {
     return todaySchedule.some(t => cur >= toNum(t.s) && cur <= toNum(t.e)) ? 'CLASS' : 'BREAK';
 }
 
+// ─── 소리 타이머 (10초 후 자동 꺼짐) ───
+function startSoundOffTimer(audioEl) {
+    if (soundOffTimer) clearTimeout(soundOffTimer);
+    soundOffTimer = setTimeout(() => {
+        audioEl.pause();
+        audioEl.currentTime = 0;
+        // 소리 꺼짐 배지 표시
+        const badge = document.getElementById('sound-off-badge');
+        badge.style.display = 'block';
+        setTimeout(() => badge.style.display = 'none', 3000);
+    }, 10000);
+}
+
+// ─── 리스너 ───
 function attachListeners() {
     callListenerRef = db.ref(`rooms/${roomId}/call`);
     callListenerRef.on('value', snap => {
         const data = snap.val();
-        if (data && data.status === 'calling') {
-            getMode() === 'CLASS' ? showToast(data) : showOverlay(data);
-        } else hideAll();
+        if (data && (data.status === 'calling' || data.status === 'notice')) {
+            if (data.isNotice) {
+                // 공지 모드: 항상 풀스크린
+                showNoticeOverlay(data);
+            } else {
+                getMode() === 'CLASS' ? showToast(data) : showOverlay(data);
+            }
+        } else {
+            hideAll();
+        }
     });
 
     scheduleListenerRef = db.ref(`rooms/${roomId}/schedule`);
@@ -237,33 +289,79 @@ function attachListeners() {
     });
 }
 
-let toastTimer = null;
+// ─── 토스트 (수업 중) ───
 function showToast(data) {
     if (toastTimer) clearTimeout(toastTimer);
-    document.getElementById('t-students').innerHTML = data.students.map(s => `${s.num}번 <strong>${s.name}</strong>`).join('<br>');
-    document.getElementById('t-errand').textContent = '→ ' + data.errand;
+    if (soundOffTimer) clearTimeout(soundOffTimer);
+
+    const isNotice = data.isNotice;
+    document.getElementById('t-title').textContent = isNotice ? '📣 전체 공지' : '🔔 학생 호출';
+    document.getElementById('t-title').style.color = isNotice ? '#f57c00' : '#4a90e2';
+
     const toast = document.getElementById('toast');
+    toast.className = 'toast' + (isNotice ? ' notice-style' : '');
+
+    if (data.students && data.students.length > 0) {
+        document.getElementById('t-students').innerHTML = data.students.map(s => `${s.num}번 <strong>${s.name}</strong>`).join('<br>');
+    } else {
+        document.getElementById('t-students').innerHTML = '';
+    }
+    document.getElementById('t-errand').textContent = '→ ' + data.errand;
+
     toast.style.display = 'block'; toast.classList.add('show');
-    document.getElementById('snd-toast').play().catch(()=>{});
-    toastTimer = setTimeout(clearCall, 7000);
+
+    const snd = document.getElementById('snd-toast');
+    snd.currentTime = 0;
+    snd.play().catch(() => {});
+    startSoundOffTimer(snd);
+
+    toastTimer = setTimeout(clearCall, 15000); // 15초 후 자동 닫힘
 }
 
+// ─── 풀스크린 오버레이 (쉬는 시간 호출) ───
 function showOverlay(data) {
     document.getElementById('f-students').innerHTML = '📢 ' + data.students.map(s => `${s.num}번 ${s.name}`).join(' · ') + ' 학생!!';
     document.getElementById('f-errand').textContent = data.errand;
-    document.getElementById('overlay').style.display = 'flex';
-    document.getElementById('snd-full').play().catch(()=>{});
+    const overlay = document.getElementById('overlay');
+    overlay.className = 'overlay'; // 기본 빨간색
+    overlay.style.display = 'flex';
+
+    const snd = document.getElementById('snd-full');
+    snd.currentTime = 0;
+    snd.play().catch(() => {});
+    startSoundOffTimer(snd);
+}
+
+// ─── 공지 오버레이 (항상 풀스크린, 주황색) ───
+function showNoticeOverlay(data) {
+    document.getElementById('f-students').innerHTML = '📣 전체 공지';
+    document.getElementById('f-errand').textContent = data.errand;
+    const overlay = document.getElementById('overlay');
+    overlay.className = 'notice-overlay';
+    overlay.style.display = 'flex';
+
+    const snd = document.getElementById('snd-toast');
+    snd.currentTime = 0;
+    snd.play().catch(() => {});
+    startSoundOffTimer(snd);
 }
 
 function hideAll() {
     if (toastTimer) clearTimeout(toastTimer);
+    if (soundOffTimer) clearTimeout(soundOffTimer);
     document.getElementById('toast').style.display = 'none';
     document.getElementById('overlay').style.display = 'none';
-    document.getElementById('snd-full').pause(); document.getElementById('snd-full').currentTime = 0;
+    document.getElementById('sound-off-badge').style.display = 'none';
+
+    const sndFull = document.getElementById('snd-full');
+    sndFull.pause(); sndFull.currentTime = 0;
+    const sndToast = document.getElementById('snd-toast');
+    sndToast.pause(); sndToast.currentTime = 0;
 }
 
-function clearCall() { db.ref(`rooms/${roomId}/call`).set({ status: 'idle' }); }
-
+function clearCall() {
+    db.ref(`rooms/${roomId}/call`).set({ status: 'idle' });
+}
 </script>
 </body>
 </html>
