@@ -10,49 +10,45 @@
             font-family: 'Noto Sans KR', sans-serif;
             margin: 0; padding: 0;
             background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
-            min-height: 100vh;
+            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
         .container {
-            max-width: 100%; margin: 0;
-            background: rgba(255,255,255,0.45);
-            backdrop-filter: blur(15px);
-            padding: 28px; border-radius: 0;
-            border: none;
-            box-shadow: none;
-            min-height: 100vh;
+            flex: 1; display: flex; flex-direction: column;
+            width: 100%; max-width: 1400px; margin: 0 auto; /* 중앙 정렬 및 최대 너비 고정 */
+            background: rgba(255,255,255,0.45); backdrop-filter: blur(15px);
+            padding: 20px 28px;
         }
         .header {
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 2px solid rgba(255,255,255,0.5);
-            padding-bottom: 14px; margin-bottom: 18px; color: #334e68;
+            padding-bottom: 14px; margin-bottom: 15px; color: #334e68; flex-shrink: 0;
         }
         .header h2 { margin: 0; font-size: 1.2rem; }
         .header-info { font-size: 0.9rem; color: #607d8b; font-weight: 700; }
 
-        /* 메인 화면 */
-        #main-view { display: block; }
-        #settings-view { display: none; }
-
-        /* 메인 2열 레이아웃 */
+        /* 메인 2열 레이아웃 (학생 3 : 용무 1 비율 고정) */
+        #main-view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
         .main-layout {
-            display: grid;
-            grid-template-columns: 1fr 280px;
+            flex: 1; display: grid; 
+            grid-template-columns: 3fr 1fr; /* 3:1 비율 고정 */
             gap: 16px;
-            margin-bottom: 16px;
+            min-height: 0;
         }
         .section-title {
             font-size: 0.88rem; font-weight: 700; color: #334e68;
             margin-bottom: 10px; padding-bottom: 6px;
-            border-bottom: 1px solid rgba(255,255,255,0.6);
+            border-bottom: 1px solid rgba(255,255,255,0.6); flex-shrink: 0;
         }
 
-        /* 학생 버튼 */
+        /* 학생 버튼 (5열 고정) */
+        .left-col { display: flex; flex-direction: column; min-height: 0; }
         .student-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            flex: 1; overflow-y: auto; display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5열 고정 */
             gap: 10px;
-            max-height: 520px; overflow-y: auto;
+            padding-right: 5px; align-content: start;
         }
+        
         .btn-student {
             padding: 18px 6px; border: 1.5px solid rgba(255,255,255,0.8);
             border-radius: 14px; cursor: pointer; font-weight: bold;
@@ -62,161 +58,66 @@
         }
         .btn-student .num { font-size: 0.72rem; color: #90afc5; display: block; }
         .btn-student:hover { background: rgba(255,255,255,0.93); transform: translateY(-2px); }
-        .btn-student.selected {
-            background: rgba(100,180,100,0.7); color: white;
-            border-color: rgba(80,160,80,0.9);
-        }
+        .btn-student.selected { background: rgba(100,180,100,0.7); color: white; border-color: rgba(80,160,80,0.9); }
         .btn-student.selected .num { color: rgba(255,255,255,0.8); }
-        .btn-student.calling {
-            background: rgba(255,80,80,0.65); color: white;
-            border-color: rgba(255,60,60,0.8);
-        }
+        .btn-student.calling { background: rgba(255,80,80,0.65); color: white; border-color: rgba(255,60,60,0.8); }
         .btn-student.calling .num { color: rgba(255,255,255,0.7); }
 
         /* 용무 버튼 */
-        .errand-grid {
-            display: flex; flex-direction: column; gap: 6px;
-        }
+        .right-col { display: flex; flex-direction: column; }
+        .errand-grid { display: flex; flex-direction: column; gap: 6px; flex: 1; overflow-y: auto; padding-right: 5px; }
         .btn-errand {
-            padding: 9px 12px; border: 1.5px solid rgba(255,255,255,0.8);
+            padding: 10px 12px; border: 1.5px solid rgba(255,255,255,0.8);
             border-radius: 10px; cursor: pointer; font-weight: bold;
             background: rgba(255,255,255,0.6); color: #334e68;
             transition: all 0.2s; font-family: 'Noto Sans KR', sans-serif;
-            font-size: 0.8rem; text-align: left;
+            font-size: 0.85rem; text-align: left;
         }
         .btn-errand:hover { background: rgba(255,255,255,0.93); }
-        .btn-errand.selected {
-            background: rgba(142,197,252,0.7); color: #1a3a5c;
-            border-color: rgba(100,170,240,0.9);
-        }
-        .errand-custom {
-            display: none; margin-top: 6px;
-        }
+        .btn-errand.selected { background: rgba(142,197,252,0.7); color: #1a3a5c; border-color: rgba(100,170,240,0.9); }
+        .errand-custom { display: none; margin-top: 6px; }
         .errand-custom input {
-            width: 100%; border: none; border-radius: 10px;
-            padding: 10px 12px; background: rgba(255,255,255,0.85);
-            color: #333; outline: none; font-family: 'Noto Sans KR', sans-serif;
-            font-size: 0.92rem;
+            width: 100%; border: none; border-radius: 10px; padding: 10px 12px;
+            background: rgba(255,255,255,0.85); color: #333; outline: none; font-family: 'Noto Sans KR', sans-serif; font-size: 0.92rem;
         }
 
         /* 호출 영역 */
-        .call-section { margin-top: 4px; }
-        #status-bar {
-            text-align: center; padding: 10px; border-radius: 10px;
-            margin-bottom: 12px; font-size: 0.88rem;
-            background: rgba(255,255,255,0.4); color: #334e68; font-weight: bold;
-        }
-        #selected-preview {
-            background: rgba(255,255,255,0.4); border-radius: 12px;
-            padding: 12px 16px; margin-bottom: 12px; min-height: 44px;
-            font-size: 0.88rem; color: #334e68;
-        }
-        .preview-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-        .chip {
-            background: rgba(100,180,100,0.25); border: 1px solid rgba(100,180,100,0.5);
-            color: #2e5e2e; border-radius: 20px; padding: 4px 10px;
-            font-size: 0.82rem; font-weight: 700;
-        }
-        .chip-errand {
-            background: rgba(142,197,252,0.3); border-color: rgba(100,170,240,0.5);
-            color: #1a3a5c;
-        }
-
-        .btn-call {
-            width: 100%; padding: 15px; border: none; border-radius: 14px;
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            color: white; font-size: 1.1rem; font-weight: 900;
-            cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
-            transition: all 0.2s; box-shadow: 0 4px 15px rgba(238,90,36,0.3);
-        }
+        .call-section { margin-top: 15px; flex-shrink: 0; }
+        #status-bar { text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 0.88rem; background: rgba(255,255,255,0.4); color: #334e68; font-weight: bold; }
+        #selected-preview { background: rgba(255,255,255,0.4); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; min-height: 44px; font-size: 0.88rem; color: #334e68; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .chip { background: rgba(100,180,100,0.25); border: 1px solid rgba(100,180,100,0.5); color: #2e5e2e; border-radius: 20px; padding: 4px 10px; font-size: 0.82rem; font-weight: 700; }
+        .chip-errand { background: rgba(142,197,252,0.3); border-color: rgba(100,170,240,0.5); color: #1a3a5c; }
+        .btn-call { width: calc(100% - 130px); padding: 15px; border: none; border-radius: 14px; background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; font-size: 1.1rem; font-weight: 900; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: all 0.2s; box-shadow: 0 4px 15px rgba(238,90,36,0.3); float: left;}
         .btn-call:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(238,90,36,0.4); }
         .btn-call:disabled { background: rgba(150,150,150,0.4); box-shadow: none; transform: none; cursor: not-allowed; }
-        .btn-clear {
-            width: 100%; padding: 10px; border: none; border-radius: 12px;
-            background: rgba(100,116,139,0.5); color: white; font-size: 0.9rem;
-            font-weight: bold; cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
-            margin-top: 8px; transition: opacity 0.2s;
-        }
+        .btn-clear { width: 120px; padding: 15px; border: none; border-radius: 14px; background: rgba(100,116,139,0.5); color: white; font-size: 0.95rem; font-weight: bold; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; float: right; transition: opacity 0.2s; }
         .btn-clear:hover { opacity: 0.8; }
 
         /* 설정 화면 */
+        #settings-view { display: none; flex: 1; flex-direction: column; min-height: 0; overflow-y: auto; padding-right: 10px;}
         .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
-        .tab-btn {
-            padding: 8px 20px; border: none; border-radius: 30px; cursor: pointer;
-            font-weight: bold; font-family: 'Noto Sans KR', sans-serif;
-            background: rgba(255,255,255,0.4); color: #334e68; transition: all 0.2s;
-        }
+        .tab-btn { padding: 8px 20px; border: none; border-radius: 30px; cursor: pointer; font-weight: bold; font-family: 'Noto Sans KR', sans-serif; background: rgba(255,255,255,0.4); color: #334e68; transition: all 0.2s; }
         .tab-btn.active { background: #8ec5fc; color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        
+        .day-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .day-btn { flex: 1; padding: 8px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; background: rgba(255,255,255,0.5); color: #334e68; font-family: 'Noto Sans KR', sans-serif; }
+        .day-btn.active { background: #e0c3fc; color: #334e68; box-shadow: inset 0 0 0 2px #fff;}
 
-        .panel {
-            background: rgba(255,255,255,0.5);
-            padding: 18px; border-radius: 15px; margin-bottom: 14px;
-            border: 1px solid rgba(255,255,255,0.6);
-        }
+        .panel { background: rgba(255,255,255,0.5); padding: 18px; border-radius: 15px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.6); }
         .panel label { color: #334e68; font-weight: bold; font-size: 0.88rem; display: block; margin-bottom: 6px; }
-        .panel select {
-            border: none; border-radius: 10px;
-            padding: 9px 12px; background: rgba(255,255,255,0.85);
-            color: #333; outline: none; font-family: 'Noto Sans KR', sans-serif;
-            font-size: 0.93rem; width: 100%; margin-bottom: 10px;
-        }
+        .panel select { border: none; border-radius: 10px; padding: 9px 12px; background: rgba(255,255,255,0.85); color: #333; outline: none; font-family: 'Noto Sans KR', sans-serif; font-size: 0.93rem; width: 100%; margin-bottom: 10px; }
         .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .row2 select { margin-bottom: 0; }
-
-        .student-table { width: 100%; border-collapse: collapse; }
-        .student-table th {
-            background: rgba(142,197,252,0.35); color: #334e68;
-            padding: 7px 10px; font-size: 0.82rem; text-align: left;
-        }
-        .student-table td { padding: 3px 5px; }
-        .student-table td:first-child, .student-table td:nth-child(3) {
-            text-align: center; color: #607d8b; font-weight: bold; font-size: 0.82rem; width: 42px;
-        }
-        .student-table input {
-            width: 100%; border: none; border-radius: 7px;
-            padding: 6px 9px; background: rgba(255,255,255,0.85);
-            color: #333; outline: none; font-family: 'Noto Sans KR', sans-serif; margin: 0;
-        }
-        .student-table tr:nth-child(even) { background: rgba(255,255,255,0.12); }
-        .scroll-box { overflow-y: auto; max-height: 340px; }
-
-        .schedule-table { width: 100%; border-collapse: collapse; }
-        .schedule-table th {
-            background: rgba(142,197,252,0.35); color: #334e68;
-            padding: 7px; font-size: 0.82rem; text-align: center;
-        }
-        .schedule-table td { padding: 3px 4px; text-align: center; }
-        .schedule-table td:first-child { color: #607d8b; font-weight: bold; font-size: 0.82rem; width: 55px; }
-        .schedule-table input {
-            width: 100%; border: none; border-radius: 7px;
-            padding: 6px 8px; background: rgba(255,255,255,0.85);
-            color: #333; outline: none; font-family: 'Noto Sans KR', sans-serif;
-            text-align: center; margin: 0;
-        }
-        .time-input { width: 72px !important; }
-
-        .btn-save {
-            background: linear-gradient(135deg, #8ec5fc, #e0c3fc);
-            color: #334e68; font-weight: bold;
-            width: 100%; padding: 12px; border: none; border-radius: 12px;
-            cursor: pointer; font-size: 0.97rem; font-family: 'Noto Sans KR', sans-serif;
-            margin-top: 4px; transition: opacity 0.2s;
-        }
+        .student-table, .schedule-table { width: 100%; border-collapse: collapse; }
+        .student-table th, .schedule-table th { background: rgba(142,197,252,0.35); color: #334e68; padding: 7px; font-size: 0.82rem; }
+        .student-table td, .schedule-table td { padding: 3px; }
+        .student-table input, .schedule-table input { width: 100%; border: none; border-radius: 7px; padding: 6px 8px; background: rgba(255,255,255,0.85); color: #333; outline: none; font-family: 'Noto Sans KR', sans-serif; }
+        .schedule-table input { text-align: center; }
+        
+        .btn-save { background: linear-gradient(135deg, #8ec5fc, #e0c3fc); color: #334e68; font-weight: bold; width: 100%; padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-size: 0.97rem; font-family: 'Noto Sans KR', sans-serif; transition: opacity 0.2s; }
         .btn-save:hover { opacity: 0.82; }
-        .btn-back {
-            background: rgba(100,116,139,0.6); color: white;
-            border: none; border-radius: 10px; padding: 9px 16px;
-            cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
-            font-weight: bold; font-size: 0.9rem;
-        }
-        .btn-config {
-            background: rgba(100,116,139,0.75); color: white;
-            border: none; border-radius: 10px; padding: 9px 14px;
-            cursor: pointer; font-family: 'Noto Sans KR', sans-serif; font-weight: bold;
-        }
-        .empty-msg { text-align: center; color: #90afc5; padding: 30px 0; grid-column: 1/-1; font-size: 0.9rem; }
+        .btn-config, .btn-back { background: rgba(100,116,139,0.75); color: white; border: none; border-radius: 10px; padding: 9px 14px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -229,21 +130,14 @@
         </div>
     </div>
 
-    <!-- ───── 메인 호출 화면 ───── -->
     <div id="main-view">
         <div id="status-bar">학생을 선택하고 용무를 골라 호출하세요</div>
-
         <div class="main-layout">
-            <!-- 좌측: 학생 선택 -->
-            <div>
+            <div class="left-col">
                 <div class="section-title">👤 학생 선택 <span id="selected-count" style="color:#8ec5fc;">(0명)</span></div>
-                <div class="student-grid" id="student-buttons">
-                    <div class="empty-msg">⚙️ 설정에서 학반을 선택하세요</div>
-                </div>
+                <div class="student-grid" id="student-buttons"></div>
             </div>
-
-            <!-- 우측: 용무 선택 -->
-            <div>
+            <div class="right-col">
                 <div class="section-title">📋 용무 선택</div>
                 <div class="errand-grid">
                     <button class="btn-errand" onclick="selectErrand(this, '선생님(교무실)에게 오세요')">🏫 선생님(교무실)에게 오세요</button>
@@ -258,86 +152,69 @@
                 </div>
             </div>
         </div>
-
-        <!-- 선택 미리보기 + 호출 버튼 -->
         <div class="call-section">
-            <div id="selected-preview">
-                <span style="color:#90afc5;">선택된 학생과 용무가 여기에 표시됩니다</span>
+            <div id="selected-preview"><span style="color:#90afc5;">선택된 학생과 용무가 여기에 표시됩니다</span></div>
+            <div style="overflow: hidden;">
+                <button class="btn-call" id="btn-call" onclick="doCall()" disabled>📢 호출하기</button>
+                <button class="btn-clear" onclick="clearAll()">✕ 초기화</button>
             </div>
-            <button class="btn-call" id="btn-call" onclick="doCall()" disabled>📢 호출하기</button>
-            <button class="btn-clear" onclick="clearAll()">✕ 선택 초기화</button>
         </div>
     </div>
 
-    <!-- ───── 설정 화면 ───── -->
     <div id="settings-view">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
             <div class="tabs" style="margin:0;">
                 <button class="tab-btn active" id="tbtn-class" onclick="switchTab('tab-class','tbtn-class')">🏫 학반 · 학생</button>
-                <button class="tab-btn" id="tbtn-schedule" onclick="switchTab('tab-schedule','tbtn-schedule')">📅 시간표</button>
+                <button class="tab-btn" id="tbtn-schedule" onclick="switchTab('tab-schedule','tbtn-schedule')">📅 주간 시간표</button>
             </div>
             <button class="btn-back" onclick="showMain()">← 메인으로</button>
         </div>
 
-        <!-- 학반·학생 탭 -->
         <div id="tab-class" class="tab-content active">
-            <div class="panel" style="border: 2px dashed rgba(142,197,252,0.7); background:rgba(142,197,252,0.1);">
-                <label>📂 엑셀로 전체 학반 한 번에 업로드</label>
-                <p style="font-size:0.82rem; color:#78909c; margin:0 0 10px;">A열=번호, B~F열=1-1~1-5, G~L열=2-1~2-6, M~R열=3-1~3-6</p>
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <input type="file" id="excel-file" accept=".xlsx,.xls" style="flex:1; border:none; border-radius:10px; padding:8px; background:rgba(255,255,255,0.8);">
-                    <button onclick="uploadExcel()" style="background:#8ec5fc; color:#334e68; border:none; border-radius:10px; padding:10px 18px; font-weight:bold; font-family:'Noto Sans KR',sans-serif; cursor:pointer; white-space:nowrap;">업로드</button>
-                </div>
-                <div id="upload-status" style="margin-top:8px; font-size:0.85rem; color:#78909c;"></div>
-            </div>
-
             <div class="panel">
                 <label>학년 / 반 선택</label>
                 <div class="row2">
                     <select id="sel-grade" onchange="updateClassOptions(); loadStudentsFromFirebase();">
-                        <option value="1">1학년</option>
-                        <option value="2">2학년</option>
-                        <option value="3" selected>3학년</option>
+                        <option value="1">1학년</option><option value="2">2학년</option><option value="3" selected>3학년</option>
                     </select>
                     <select id="sel-class" onchange="loadStudentsFromFirebase()"></select>
                 </div>
             </div>
-
             <div class="panel">
-                <label>학생 명단 &nbsp;<span style="font-weight:normal;color:#90afc5;">— 직접 수정 후 저장 가능</span></label>
+                <label>학생 명단 (직접 수정)</label>
                 <select id="sel-count" onchange="renderNameInputs()" style="width:auto; margin-bottom:14px;">
-                    <option value="20">20명</option><option value="21">21명</option><option value="22">22명</option>
-                    <option value="23">23명</option><option value="24">24명</option><option value="25">25명</option>
-                    <option value="26">26명</option><option value="27">27명</option><option value="28">28명</option>
-                    <option value="29">29명</option><option value="30" selected>30명</option>
+                    <option value="20">20명</option><option value="25">25명</option><option value="30" selected>30명</option>
                 </select>
-                <div class="scroll-box">
-                    <table class="student-table">
-                        <thead><tr><th style="width:42px;">번호</th><th>이름</th><th style="width:42px;">번호</th><th>이름</th></tr></thead>
-                        <tbody id="name-inputs"></tbody>
-                    </table>
-                </div>
+                <table class="student-table">
+                    <thead><tr><th>번호</th><th>이름</th><th>번호</th><th>이름</th></tr></thead>
+                    <tbody id="name-inputs"></tbody>
+                </table>
             </div>
-            <button class="btn-save" onclick="saveAll()">💾 저장 및 메인으로</button>
+            <button class="btn-save" onclick="saveAll()">💾 명단 저장 및 메인으로</button>
         </div>
 
-        <!-- 시간표 탭 -->
         <div id="tab-schedule" class="tab-content">
             <div class="panel">
-                <label>오늘 시간표 설정 &nbsp;<span style="font-weight:normal;color:#90afc5;">— 저장 시 알림판에 즉시 반영</span></label>
+                <label>요일별 시간표 설정</label>
+                <div class="day-tabs">
+                    <button class="day-btn active" onclick="changeDay(1, this)">월</button>
+                    <button class="day-btn" onclick="changeDay(2, this)">화</button>
+                    <button class="day-btn" onclick="changeDay(3, this)">수</button>
+                    <button class="day-btn" onclick="changeDay(4, this)">목</button>
+                    <button class="day-btn" onclick="changeDay(5, this)">금</button>
+                </div>
                 <table class="schedule-table">
                     <thead><tr><th>교시</th><th>시작</th><th>종료</th><th>과목명</th></tr></thead>
                     <tbody id="schedule-inputs"></tbody>
                 </table>
             </div>
-            <button class="btn-save" onclick="saveSchedule()">📡 시간표 저장 → 알림판 반영</button>
+            <button class="btn-save" onclick="saveSchedule()">📡 주간 시간표 전체 저장 → 알림판 자동 반영</button>
         </div>
     </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const firebaseConfig = {
     apiKey: "AIzaSyA4CV81dEy5TTNTKsx59tEohrH9VxrEAU4",
@@ -353,62 +230,32 @@ const db = firebase.database();
 
 const SCHOOL_STRUCTURE = { '1': 5, '2': 6, '3': 6 };
 const DEFAULT_SCHEDULE = [
-    { period:1, s:"08:50", e:"09:35", subject:"" },
-    { period:2, s:"09:45", e:"10:30", subject:"" },
-    { period:3, s:"10:40", e:"11:25", subject:"" },
-    { period:4, s:"11:35", e:"12:20", subject:"" },
-    { period:5, s:"13:20", e:"14:05", subject:"" },
-    { period:6, s:"14:15", e:"15:00", subject:"" }
+    { period:1, s:"08:50", e:"09:35", subject:"" }, { period:2, s:"09:45", e:"10:30", subject:"" },
+    { period:3, s:"10:40", e:"11:25", subject:"" }, { period:4, s:"11:35", e:"12:20", subject:"" },
+    { period:5, s:"13:20", e:"14:05", subject:"" }, { period:6, s:"14:15", e:"15:00", subject:"" }
 ];
 
-// ── 상태 ──
-let selectedStudents = []; // [{num, name}, ...]
+let selectedStudents = [];
 let selectedErrand = '';
+let currentEditDay = 1; // 1:월 ~ 5:금
+let weeklySchedule = JSON.parse(localStorage.getItem('weeklySchedule')) || {
+    1:[...DEFAULT_SCHEDULE], 2:[...DEFAULT_SCHEDULE], 3:[...DEFAULT_SCHEDULE], 4:[...DEFAULT_SCHEDULE], 5:[...DEFAULT_SCHEDULE]
+};
 
-// ── 화면 전환 ──
 function showSettings() {
     document.getElementById('main-view').style.display = 'none';
-    document.getElementById('settings-view').style.display = 'block';
-    loadSettingsUI();
-}
-function showMain() {
-    document.getElementById('settings-view').style.display = 'none';
-    document.getElementById('main-view').style.display = 'block';
-    renderCallButtons();
-}
-
-// ── 학반 드롭다운 ──
-function updateClassOptions() {
-    const grade = document.getElementById('sel-grade').value;
-    const maxClass = SCHOOL_STRUCTURE[grade] || 6;
-    const savedCls = localStorage.getItem('cls') || '6';
-    const sel = document.getElementById('sel-class');
-    sel.innerHTML = '';
-    for (let i = 1; i <= maxClass; i++) {
-        const opt = document.createElement('option');
-        opt.value = i; opt.textContent = `${i}반`;
-        if (String(i) === String(savedCls)) opt.selected = true;
-        sel.appendChild(opt);
-    }
-}
-
-function getRoomId() {
-    return `${localStorage.getItem('grade')||'3'}-${localStorage.getItem('cls')||'6'}`;
-}
-
-function updateHeaderRoom() {
-    const g = localStorage.getItem('grade') || '3';
-    const c = localStorage.getItem('cls') || '6';
-    document.getElementById('header-room').textContent = `${g}학년 ${c}반`;
-}
-
-// ── 설정 UI 로드 ──
-function loadSettingsUI() {
+    document.getElementById('settings-view').style.display = 'flex';
     document.getElementById('sel-grade').value = localStorage.getItem('grade') || '3';
     updateClassOptions();
     document.getElementById('sel-count').value = localStorage.getItem('count') || '30';
     renderNameInputs();
     renderScheduleInputs();
+}
+
+function showMain() {
+    document.getElementById('settings-view').style.display = 'none';
+    document.getElementById('main-view').style.display = 'flex';
+    renderCallButtons();
 }
 
 function switchTab(id, btnId) {
@@ -418,273 +265,167 @@ function switchTab(id, btnId) {
     document.getElementById(btnId).classList.add('active');
 }
 
-// ── 학생 이름 입력 테이블 ──
-function renderNameInputs(names) {
+function updateClassOptions() {
+    const grade = document.getElementById('sel-grade').value;
+    const maxClass = SCHOOL_STRUCTURE[grade] || 6;
+    const sel = document.getElementById('sel-class');
+    sel.innerHTML = '';
+    for (let i = 1; i <= maxClass; i++) {
+        sel.innerHTML += `<option value="${i}" ${i == (localStorage.getItem('cls')||'6') ? 'selected':''}>${i}반</option>`;
+    }
+}
+
+function getRoomId() { return `${localStorage.getItem('grade')||'3'}-${localStorage.getItem('cls')||'6'}`; }
+function updateHeaderRoom() { document.getElementById('header-room').textContent = `${localStorage.getItem('grade')||'3'}학년 ${localStorage.getItem('cls')||'6'}반`; }
+
+function renderNameInputs(names = []) {
     const count = parseInt(document.getElementById('sel-count').value);
-    const data = names || [];
-    const tbody = document.getElementById('name-inputs');
-    tbody.innerHTML = '';
+    let tbody = '';
     const half = Math.ceil(count / 2);
     for (let r = 0; r < half; r++) {
         const l = r + 1, ri = r + 1 + half;
-        let row = `<tr>
-            <td>${l}</td>
-            <td><input type="text" id="s${l}" placeholder="${l}번 이름" value="${data[l-1]||''}"></td>`;
-        if (ri <= count) {
-            row += `<td>${ri}</td><td><input type="text" id="s${ri}" placeholder="${ri}번 이름" value="${data[ri-1]||''}"></td>`;
-        } else { row += `<td></td><td></td>`; }
-        row += `</tr>`;
-        tbody.innerHTML += row;
+        tbody += `<tr><td align="center">${l}</td><td><input type="text" id="s${l}" value="${names[l-1]||''}"></td>`;
+        if (ri <= count) tbody += `<td align="center">${ri}</td><td><input type="text" id="s${ri}" value="${names[ri-1]||''}"></td></tr>`;
+        else tbody += `<td></td><td></td></tr>`;
     }
+    document.getElementById('name-inputs').innerHTML = tbody;
 }
 
-// ── 시간표 입력 테이블 ──
-function renderScheduleInputs() {
-    const saved = JSON.parse(localStorage.getItem('schedule') || 'null') || DEFAULT_SCHEDULE;
-    const tbody = document.getElementById('schedule-inputs');
-    tbody.innerHTML = '';
-    saved.forEach((item, i) => {
-        tbody.innerHTML += `<tr>
-            <td>${item.period}교시</td>
-            <td><input class="time-input" type="text" id="sch-s${i}" value="${item.s}" placeholder="08:50"></td>
-            <td><input class="time-input" type="text" id="sch-e${i}" value="${item.e}" placeholder="09:35"></td>
-            <td><input type="text" id="sch-subj${i}" value="${item.subject}" placeholder="과목명"></td>
-        </tr>`;
-    });
-}
-
-// ── Firebase에서 학생 불러오기 ──
 function loadStudentsFromFirebase() {
-    const grade = document.getElementById('sel-grade').value;
-    const cls = document.getElementById('sel-class').value;
-    if (!cls) return;
-    db.ref(`rooms/${grade}-${cls}/students`).once('value', snap => {
-        const names = snap.val();
-        const count = (names && names.length) ? names.length : 30;
-        document.getElementById('sel-count').value = Math.min(count, 30);
-        renderNameInputs(names || []);
+    const g = document.getElementById('sel-grade').value, c = document.getElementById('sel-class').value;
+    db.ref(`rooms/${g}-${c}/students`).once('value', snap => {
+        const names = snap.val() || [];
+        document.getElementById('sel-count').value = Math.min(names.length || 30, 30);
+        renderNameInputs(names);
     });
 }
 
-// ── 엑셀 업로드 ──
-const COL_MAP = [
-    '1-1','1-2','1-3','1-4','1-5',
-    '2-1','2-2','2-3','2-4','2-5','2-6',
-    '3-1','3-2','3-3','3-4','3-5','3-6'
-];
-function uploadExcel() {
-    const file = document.getElementById('excel-file').files[0];
-    if (!file) { alert('파일을 선택하세요.'); return; }
-    const status = document.getElementById('upload-status');
-    status.textContent = '⏳ 처리 중...';
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const wb = XLSX.read(e.target.result, { type: 'array' });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-            const updates = {};
-            COL_MAP.forEach((roomKey, colIdx) => {
-                const names = rows.map(row => (row[colIdx+1]||'').toString().trim()).filter(v => v);
-                const [g, c] = roomKey.split('-');
-                updates[`rooms/${roomKey}/students`] = names;
-                updates[`rooms/${roomKey}/info`] = { grade: g, cls: c, count: names.length };
-            });
-            db.ref().update(updates).then(() => {
-                status.innerHTML = `✅ ${COL_MAP.length}개 반 업로드 완료!`;
-                status.style.color = '#2e7d32';
-                loadStudentsFromFirebase();
-            }).catch(err => {
-                status.textContent = '❌ 저장 실패: ' + err.message;
-                status.style.color = '#c62828';
-            });
-        } catch(err) {
-            status.textContent = '❌ 파일 오류: ' + err.message;
-            status.style.color = '#c62828';
-        }
-    };
-    reader.readAsArrayBuffer(file);
-}
-
-// ── 저장 ──
 function saveAll() {
-    const grade = document.getElementById('sel-grade').value;
-    const cls = document.getElementById('sel-class').value;
-    const count = parseInt(document.getElementById('sel-count').value);
-    localStorage.setItem('grade', grade);
-    localStorage.setItem('cls', cls);
-    localStorage.setItem('count', count);
-    const names = [];
-    for (let i = 1; i <= count; i++) {
-        names.push((document.getElementById(`s${i}`)?.value || '').trim());
-    }
-    const roomId = `${grade}-${cls}`;
-    db.ref(`rooms/${roomId}/students`).set(names);
-    db.ref(`rooms/${roomId}/info`).set({ grade, cls, count });
-    showMain(); // 저장 후 메인으로
-}
-
-function saveSchedule() {
-    const base = JSON.parse(localStorage.getItem('schedule') || 'null') || DEFAULT_SCHEDULE;
-    const schedule = base.map((item, i) => ({
-        period: item.period,
-        s: document.getElementById(`sch-s${i}`).value.trim(),
-        e: document.getElementById(`sch-e${i}`).value.trim(),
-        subject: document.getElementById(`sch-subj${i}`).value.trim()
-    }));
-    localStorage.setItem('schedule', JSON.stringify(schedule));
-    db.ref(`rooms/${getRoomId()}/schedule`).set(schedule);
-    alert('시간표가 저장되었습니다!');
+    const g = document.getElementById('sel-grade').value, c = document.getElementById('sel-class').value, count = document.getElementById('sel-count').value;
+    localStorage.setItem('grade', g); localStorage.setItem('cls', c); localStorage.setItem('count', count);
+    const names = []; for (let i = 1; i <= count; i++) names.push(document.getElementById(`s${i}`).value.trim());
+    db.ref(`rooms/${g}-${c}/students`).set(names);
+    db.ref(`rooms/${g}-${c}/info`).set({ grade: g, cls: c, count: count });
     showMain();
 }
 
-// ── 호출 버튼 렌더 ──
-function renderCallButtons() {
-    updateHeaderRoom();
-    const roomId = getRoomId();
-    db.ref(`rooms/${roomId}/students`).once('value', snap => {
-        const names = snap.val() || [];
-        const container = document.getElementById('student-buttons');
-        container.innerHTML = '';
-        let hasAny = false;
-        names.forEach((name, i) => {
-            if (!name || !name.trim()) return;
-            hasAny = true;
-            const num = i + 1;
-            const btn = document.createElement('button');
-            btn.className = 'btn-student';
-            btn.id = `sbtn-${num}`;
-            btn.innerHTML = `<span class="num">${num}번</span>${name.trim()}`;
-            btn.onclick = () => toggleStudent(num, name.trim(), btn);
-            container.appendChild(btn);
-        });
-        if (!hasAny) container.innerHTML = '<div class="empty-msg">⚙️ 설정에서 학반을 선택하세요</div>';
-    });
-    listenCallStatus();
-    selectedStudents = [];
-    selectedErrand = '';
-    updatePreview();
+// ── 주간 시간표 로직 ──
+function changeDay(day, btn) {
+    // 1. 현재 입력된 값 먼저 저장
+    saveCurrentDaySchedule();
+    // 2. 요일 탭 UI 변경
+    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentEditDay = day;
+    // 3. 해당 요일 데이터 불러오기
+    renderScheduleInputs();
 }
 
-// ── 학생 선택 토글 ──
+function renderScheduleInputs() {
+    const data = weeklySchedule[currentEditDay] || DEFAULT_SCHEDULE;
+    let html = '';
+    data.forEach((item, i) => {
+        html += `<tr><td align="center">${item.period}교시</td>
+        <td><input type="text" id="sch-s${i}" value="${item.s}"></td>
+        <td><input type="text" id="sch-e${i}" value="${item.e}"></td>
+        <td><input type="text" id="sch-subj${i}" value="${item.subject||''}"></td></tr>`;
+    });
+    document.getElementById('schedule-inputs').innerHTML = html;
+}
+
+function saveCurrentDaySchedule() {
+    const data = [];
+    for(let i=0; i<6; i++) {
+        if(!document.getElementById(`sch-s${i}`)) break;
+        data.push({
+            period: i+1,
+            s: document.getElementById(`sch-s${i}`).value.trim(),
+            e: document.getElementById(`sch-e${i}`).value.trim(),
+            subject: document.getElementById(`sch-subj${i}`).value.trim()
+        });
+    }
+    weeklySchedule[currentEditDay] = data;
+}
+
+function saveSchedule() {
+    saveCurrentDaySchedule(); // 현재 보고 있는 요일 최종 갱신
+    localStorage.setItem('weeklySchedule', JSON.stringify(weeklySchedule));
+    db.ref(`rooms/${getRoomId()}/schedule`).set(weeklySchedule);
+    alert('주간 시간표가 저장되었습니다!');
+}
+
+// ── 호출 로직 (기존과 동일) ──
+function renderCallButtons() {
+    updateHeaderRoom();
+    db.ref(`rooms/${getRoomId()}/students`).once('value', snap => {
+        const names = snap.val() || [];
+        const container = document.getElementById('student-buttons');
+        container.innerHTML = names.length ? '' : '<div style="color:#90afc5; grid-column:1/-1;">학생 명단을 설정하세요</div>';
+        names.forEach((name, i) => {
+            if (!name) return;
+            const btn = document.createElement('button'); btn.className = 'btn-student'; btn.id = `sbtn-${i+1}`;
+            btn.innerHTML = `<span class="num">${i+1}번</span>${name}`;
+            btn.onclick = () => toggleStudent(i+1, name, btn);
+            container.appendChild(btn);
+        });
+    });
+    listenCallStatus(); clearAll();
+}
+
 function toggleStudent(num, name, btn) {
     const idx = selectedStudents.findIndex(s => s.num === num);
-    if (idx >= 0) {
-        selectedStudents.splice(idx, 1);
-        btn.classList.remove('selected');
-    } else {
-        selectedStudents.push({ num, name });
-        btn.classList.add('selected');
-    }
+    if (idx >= 0) { selectedStudents.splice(idx, 1); btn.classList.remove('selected'); }
+    else { selectedStudents.push({num, name}); btn.classList.add('selected'); }
     document.getElementById('selected-count').textContent = `(${selectedStudents.length}명)`;
     updatePreview();
 }
 
-// ── 용무 선택 ──
 function selectErrand(btn, errand) {
     document.querySelectorAll('.btn-errand').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    selectedErrand = errand;
-    const customWrap = document.getElementById('errand-custom-wrap');
-    if (errand === '기타') {
-        customWrap.style.display = 'block';
-        selectedErrand = document.getElementById('errand-custom-input').value || '';
-    } else {
-        customWrap.style.display = 'none';
-    }
+    btn.classList.add('selected'); selectedErrand = errand;
+    document.getElementById('errand-custom-wrap').style.display = errand === '기타' ? 'block' : 'none';
     updatePreview();
 }
 
-// ── 미리보기 업데이트 ──
 function updatePreview() {
-    const preview = document.getElementById('selected-preview');
-    const callBtn = document.getElementById('btn-call');
-    const errand = selectedErrand === '기타'
-        ? document.getElementById('errand-custom-input').value.trim()
-        : selectedErrand;
-
-    if (selectedStudents.length === 0 && !errand) {
-        preview.innerHTML = '<span style="color:#90afc5;">선택된 학생과 용무가 여기에 표시됩니다</span>';
-        callBtn.disabled = true;
-        return;
-    }
-    let html = '<div class="preview-chips">';
-    selectedStudents.forEach(s => {
-        html += `<span class="chip">${s.num}번 ${s.name}</span>`;
-    });
-    if (errand) html += `<span class="chip chip-errand">→ ${errand}</span>`;
-    html += '</div>';
-    preview.innerHTML = html;
-    callBtn.disabled = selectedStudents.length === 0 || !errand;
+    const p = document.getElementById('selected-preview'), cBtn = document.getElementById('btn-call');
+    const err = selectedErrand === '기타' ? document.getElementById('errand-custom-input').value.trim() : selectedErrand;
+    if (!selectedStudents.length && !err) { p.innerHTML = '<span style="color:#90afc5;">선택 대기 중...</span>'; cBtn.disabled = true; return; }
+    let h = ''; selectedStudents.forEach(s => h += `<span class="chip">${s.num}번 ${s.name}</span>`);
+    if(err) h += `<span class="chip chip-errand">→ ${err}</span>`;
+    p.innerHTML = h; cBtn.disabled = !selectedStudents.length || !err;
 }
 
-// ── 호출 실행 ──
 function doCall() {
-    const errand = selectedErrand === '기타'
-        ? document.getElementById('errand-custom-input').value.trim()
-        : selectedErrand;
-    if (selectedStudents.length === 0 || !errand) return;
-
-    const roomId = getRoomId();
-    const calls = selectedStudents.map(s => ({ num: s.num, name: s.name }));
-    db.ref(`rooms/${roomId}/call`).set({
-        status: 'calling',
-        students: calls,
-        errand: errand,
-        time: Date.now()
-    });
-
-    // 호출된 버튼 빨간색으로
-    selectedStudents.forEach(s => {
-        const btn = document.getElementById(`sbtn-${s.num}`);
-        if (btn) { btn.classList.remove('selected'); btn.classList.add('calling'); }
-    });
-    document.getElementById('status-bar').textContent =
-        `📢 호출 중: ${selectedStudents.map(s=>s.name).join(', ')} — ${errand}`;
+    const err = selectedErrand === '기타' ? document.getElementById('errand-custom-input').value.trim() : selectedErrand;
+    db.ref(`rooms/${getRoomId()}/call`).set({ status: 'calling', students: selectedStudents, errand: err, time: Date.now() });
+    selectedStudents.forEach(s => { const b = document.getElementById(`sbtn-${s.num}`); if(b){b.classList.remove('selected'); b.classList.add('calling');} });
+    document.getElementById('status-bar').innerHTML = `📢 호출 중: ${selectedStudents.length}명 — ${err}`;
     document.getElementById('status-bar').style.background = 'rgba(255,100,100,0.22)';
-
-    selectedStudents = [];
-    document.getElementById('selected-count').textContent = '(0명)';
-    updatePreview();
+    selectedStudents = []; document.getElementById('selected-count').textContent = '(0명)'; updatePreview();
 }
 
-// ── 초기화 ──
 function clearAll() {
-    const roomId = getRoomId();
-    db.ref(`rooms/${roomId}/call`).set({ status: 'idle' });
-    document.querySelectorAll('.btn-student').forEach(b => {
-        b.classList.remove('selected', 'calling');
-    });
+    db.ref(`rooms/${getRoomId()}/call`).set({ status: 'idle' });
+    document.querySelectorAll('.btn-student').forEach(b => b.classList.remove('selected', 'calling'));
     document.querySelectorAll('.btn-errand').forEach(b => b.classList.remove('selected'));
-    document.getElementById('errand-custom-wrap').style.display = 'none';
-    document.getElementById('errand-custom-input').value = '';
-    selectedStudents = [];
-    selectedErrand = '';
-    document.getElementById('selected-count').textContent = '(0명)';
-    document.getElementById('status-bar').textContent = '학생을 선택하고 용무를 골라 호출하세요';
-    document.getElementById('status-bar').style.background = 'rgba(255,255,255,0.4)';
+    document.getElementById('errand-custom-wrap').style.display = 'none'; document.getElementById('errand-custom-input').value = '';
+    selectedStudents = []; selectedErrand = ''; document.getElementById('selected-count').textContent = '(0명)';
+    document.getElementById('status-bar').textContent = '학생을 선택하고 용무를 골라 호출하세요'; document.getElementById('status-bar').style.background = 'rgba(255,255,255,0.4)';
     updatePreview();
 }
 
-// ── 호출 상태 리스닝 (다른 기기에서 idle로 바꾸면 반영) ──
 function listenCallStatus() {
-    const roomId = getRoomId();
-    db.ref(`rooms/${roomId}/call`).on('value', snap => {
-        const data = snap.val();
-        if (!data || data.status !== 'calling') {
+    db.ref(`rooms/${getRoomId()}/call`).on('value', snap => {
+        if (!snap.val() || snap.val().status !== 'calling') {
             document.querySelectorAll('.btn-student.calling').forEach(b => b.classList.remove('calling'));
-            if (document.getElementById('status-bar').textContent.startsWith('📢')) {
-                document.getElementById('status-bar').textContent = '학생을 선택하고 용무를 골라 호출하세요';
-                document.getElementById('status-bar').style.background = 'rgba(255,255,255,0.4)';
-            }
+            if(document.getElementById('status-bar').textContent.includes('📢')) clearAll();
         }
     });
 }
 
-// ── 초기 실행 ──
 document.getElementById('sel-grade').value = localStorage.getItem('grade') || '3';
-updateClassOptions();
-renderCallButtons();
+updateClassOptions(); renderCallButtons();
 </script>
 </body>
 </html>
