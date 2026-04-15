@@ -168,14 +168,15 @@
 
 <!-- 토스트 (수업 중) -->
 <div id="toast">
-    <h2 style="margin:0 0 8px; color:#4a90e2; font-size:1.1rem;">🔔 학생 호출</h2>
-    <p style="font-size:1.55rem; font-weight:bold; line-height:1.5;"><span id="t-num"></span>번 <span id="t-name"></span> 학생,<br>교탁으로 오세요.</p>
+    <h2 style="margin:0 0 10px; color:#4a90e2; font-size:1.05rem;">🔔 학생 호출</h2>
+    <div id="t-students" style="font-size:1.4rem; font-weight:bold; line-height:1.6;"></div>
+    <div id="t-errand" style="font-size:1.1rem; color:#607d8b; margin-top:6px;"></div>
 </div>
 
 <!-- 풀스크린 (쉬는 시간) -->
 <div id="overlay">
-    <h1>📢 <span id="f-num"></span>번 <span id="f-name"></span> 학생!!</h1>
-    <p>지금 즉시 교탁으로 나오세요!</p>
+    <div id="f-students" style="font-size:clamp(3rem,8vw,7rem); font-weight:900; margin:0; line-height:1.2; text-align:center;"></div>
+    <div id="f-errand" style="font-size:clamp(1.5rem,3.5vw,2.8rem); margin-top:16px; opacity:0.95;"></div>
     <button onclick="clearCall()">네, 확인했습니다!</button>
 </div>
 
@@ -353,8 +354,13 @@ attachListeners();
 
 function showToast(data) {
     if (toastTimer) clearTimeout(toastTimer);
-    document.getElementById('t-num').textContent = data.num || '';
-    document.getElementById('t-name').textContent = data.name;
+    const students = data.students || [{ num: data.num, name: data.name }];
+    const errand = data.errand || '교탁으로 오세요';
+
+    document.getElementById('t-students').innerHTML =
+        students.map(s => `${s.num}번 <strong>${s.name}</strong> 학생`).join('<br>');
+    document.getElementById('t-errand').textContent = '→ ' + errand;
+
     const toast = document.getElementById('toast');
     toast.classList.remove('show');
     toast.style.display = 'none';
@@ -367,8 +373,13 @@ function showToast(data) {
 }
 
 function showOverlay(data) {
-    document.getElementById('f-num').textContent = data.num || '';
-    document.getElementById('f-name').textContent = data.name;
+    const students = data.students || [{ num: data.num, name: data.name }];
+    const errand = data.errand || '교탁으로 오세요';
+
+    document.getElementById('f-students').innerHTML =
+        '📢 ' + students.map(s => `${s.num}번 ${s.name}`).join(' · ') + ' 학생!!';
+    document.getElementById('f-errand').textContent = errand;
+
     document.getElementById('overlay').style.display = 'flex';
     document.getElementById('snd-full').currentTime = 0;
     document.getElementById('snd-full').play().catch(()=>{});
