@@ -323,11 +323,30 @@ function getMode() {
     return scheduleData.some(t => cur >= toNum(t.s) && cur <= toNum(t.e)) ? 'CLASS' : 'BREAK';
 }
 
+// ── 브라우저 알림 권한 요청 ──
+function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+}
+requestNotificationPermission();
+
+function sendNotification(data) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const students = data.students || [{ num: data.num, name: data.name }];
+    const errand = data.errand || '교탁으로 오세요';
+    const body = students.map(s => `${s.num}번 ${s.name}`).join(', ') + '\n→ ' + errand;
+    const notif = new Notification('🔔 학생 호출', { body, icon: '' });
+    notif.onclick = () => { window.focus(); notif.close(); };
+    setTimeout(() => notif.close(), 7000);
+}
+
 function attachListeners() {
     callListenerRef = db.ref(`rooms/${roomId}/call`);
     callListenerRef.on('value', snap => {
         const data = snap.val();
         if (data && data.status === 'calling') {
+            sendNotification(data); // 최소화 상태에서도 알림
             getMode() === 'CLASS' ? showToast(data) : showOverlay(data);
         } else {
             hideAll();
