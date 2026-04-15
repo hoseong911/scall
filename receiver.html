@@ -242,6 +242,11 @@ function unlockAudio() {
     document.getElementById('unlock-screen').style.display = 'none';
 }
 
+// ── 시간표 데이터 (시계보다 먼저 선언) ──
+let scheduleData = [];
+
+function toNum(t) { return parseInt(t.replace(':', '')); }
+
 // ── 시계 ──
 const DAYS = ['일','월','화','수','목','금','토'];
 function updateClock() {
@@ -254,11 +259,6 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
-
-// ── 시간표 ──
-let scheduleData = [];
-
-function toNum(t) { return parseInt(t.replace(':', '')); }
 
 function getStatus(item) {
     const now = new Date();
