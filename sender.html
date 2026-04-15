@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>인천동양중학교 학생 호출 시스템</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            margin: 0; padding: 20px; 
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 860px; margin: 0 auto; 
+            background: rgba(255,255,255,0.45); 
+            backdrop-filter: blur(15px);
+            padding: 28px; border-radius: 22px; 
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1); 
+        }
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 2px solid rgba(255,255,255,0.5); 
+            padding-bottom: 14px; margin-bottom: 18px; color: #334e68;
+        }
+        .header h2 { margin: 0; font-size: 1.25rem; }
+
+        /* 탭 */
+        .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+        .tab-btn {
+            padding: 8px 20px; border: none; border-radius: 30px; cursor: pointer;
+            font-weight: bold; font-family: 'Noto Sans KR', sans-serif;
+            background: rgba(255,255,255,0.4); color: #334e68; transition: all 0.2s;
+        }
+        .tab-btn.active { background: #8ec5fc; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .panel {
+            background: rgba(255,255,255,0.5); 
+            padding: 18px; border-radius: 15px; margin-bottom: 14px;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .panel label { color: #334e68; font-weight: bold; font-size: 0.88rem; display: block; margin-bottom: 6px; }
+        .panel select, .panel input[type=text] {
+            border: none; border-radius: 10px; 
+            padding: 9px 12px; background: rgba(255,255,255,0.85);
+            color: #333; outline: none; font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.93rem; width: 100%; margin-bottom: 10px;
+        }
+        .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .row2 select { margin-bottom: 0; }
+
+        /* 학생 테이블 */
+        .student-table { width: 100%; border-collapse: collapse; }
+        .student-table th {
+            background: rgba(142,197,252,0.35); color: #334e68;
+            padding: 7px 10px; font-size: 0.82rem; text-align: left; position: sticky; top: 0;
+        }
+        .student-table td { padding: 3px 5px; }
+        .student-table td:first-child, .student-table td:nth-child(3) {
+            text-align: center; color: #607d8b; font-weight: bold; font-size: 0.82rem; width: 42px;
+        }
+        .student-table input {
+            width: 100%; border: none; border-radius: 7px;
+            padding: 6px 9px; background: rgba(255,255,255,0.85);
+            color: #333; outline: none; font-family: 'Noto Sans KR', sans-serif; margin: 0;
+        }
+        .student-table tr:nth-child(even) { background: rgba(255,255,255,0.12); }
+        .scroll-box { overflow-y: auto; max-height: 360px; }
+
+        /* 시간표 테이블 */
+        .schedule-table { width: 100%; border-collapse: collapse; }
+        .schedule-table th {
+            background: rgba(142,197,252,0.35); color: #334e68;
+            padding: 7px; font-size: 0.82rem; text-align: center;
+        }
+        .schedule-table td { padding: 3px 4px; text-align: center; }
+        .schedule-table td:first-child { color: #607d8b; font-weight: bold; font-size: 0.82rem; width: 55px; }
+        .schedule-table input {
+            width: 100%; border: none; border-radius: 7px;
+            padding: 6px 8px; background: rgba(255,255,255,0.85);
+            color: #333; outline: none; font-family: 'Noto Sans KR', sans-serif;
+            text-align: center; margin: 0;
+        }
+        .time-input { width: 72px !important; }
+
+        .btn-save { 
+            background: linear-gradient(135deg, #8ec5fc, #e0c3fc);
+            color: #334e68; font-weight: bold;
+            width: 100%; padding: 12px; border: none; border-radius: 12px;
+            cursor: pointer; font-size: 0.97rem; font-family: 'Noto Sans KR', sans-serif;
+            margin-top: 4px; transition: opacity 0.2s;
+        }
+        .btn-save:hover { opacity: 0.82; }
+        .btn-config { 
+            background: rgba(100,116,139,0.75); color: white; 
+            border: none; border-radius: 10px; padding: 9px 14px;
+            cursor: pointer; font-family: 'Noto Sans KR', sans-serif; font-weight: bold;
+        }
+
+        /* 호출 버튼 */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+        .btn-student { 
+            padding: 13px 6px; border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 13px; cursor: pointer; font-weight: bold;
+            background: rgba(255,255,255,0.6); color: #334e68;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+            transition: all 0.22s; font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.95rem; text-align: center; line-height: 1.4;
+        }
+        .btn-student .num { font-size: 0.68rem; color: #90afc5; display: block; }
+        .btn-student:hover { background: rgba(255,255,255,0.93); transform: translateY(-2px); }
+        .btn-student.calling { background: rgba(255,80,80,0.65); color: white; border-color: rgba(255,60,60,0.8); }
+        .btn-student.calling .num { color: rgba(255,255,255,0.7); }
+
+        #status-bar {
+            text-align: center; padding: 9px; border-radius: 10px;
+            margin-bottom: 14px; font-size: 0.9rem;
+            background: rgba(255,255,255,0.4); color: #334e68; font-weight: bold;
+            transition: background 0.3s;
+        }
+        .empty-msg { text-align: center; color: #90afc5; padding: 40px 0; grid-column: 1/-1; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>✨ 인천동양중학교 학생 호출 시스템</h2>
+        <button class="btn-config" onclick="toggleSettings()">⚙️ 설정</button>
+    </div>
+
+    <div id="settings-wrap" style="display:none;">
+        <div class="tabs">
+            <button class="tab-btn active" id="tbtn-class" onclick="switchTab('tab-class','tbtn-class')">🏫 학반 · 학생</button>
+            <button class="tab-btn" id="tbtn-schedule" onclick="switchTab('tab-schedule','tbtn-schedule')">📅 시간표</button>
+        </div>
+
+        <!-- 학반·학생 탭 -->
+        <div id="tab-class" class="tab-content active">
+
+            <!-- 엑셀 업로드 -->
+            <div class="panel" style="border: 2px dashed rgba(142,197,252,0.7); background:rgba(142,197,252,0.1);">
+                <label>📂 엑셀로 전체 학반 한 번에 업로드</label>
+                <p style="font-size:0.82rem; color:#78909c; margin:0 0 10px;">A열=번호, B~F열=1-1~1-5, G~L열=2-1~2-6, M~R열=3-1~3-6</p>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="file" id="excel-file" accept=".xlsx,.xls" style="flex:1; background:rgba(255,255,255,0.8); margin:0; padding:8px;">
+                    <button onclick="uploadExcel()" style="background:#8ec5fc; color:#334e68; border:none; border-radius:10px; padding:10px 18px; font-weight:bold; font-family:'Noto Sans KR',sans-serif; cursor:pointer; white-space:nowrap;">업로드</button>
+                </div>
+                <div id="upload-status" style="margin-top:8px; font-size:0.85rem; color:#78909c;"></div>
+            </div>
+
+            <div class="panel">
+                <label>학년 / 반 선택 &nbsp;<span style="font-weight:normal;color:#90afc5;">— 반 바꾸면 해당 명단 자동 로드</span></label>
+                <div class="row2">
+                    <select id="sel-grade" onchange="updateClassOptions(); loadStudentsFromFirebase();">
+                        <option value="1">1학년</option>
+                        <option value="2">2학년</option>
+                        <option value="3" selected>3학년</option>
+                    </select>
+                    <select id="sel-class" onchange="loadStudentsFromFirebase()"></select>
+                </div>
+            </div>
+
+            <div class="panel">
+                <label>학생 명단 &nbsp;<span style="font-weight:normal;color:#90afc5;">— 직접 수정 후 저장 가능</span></label>
+                <select id="sel-count" onchange="renderNameInputs()" style="width:auto; margin-bottom:14px;">
+                    <option value="20">20명</option><option value="21">21명</option><option value="22">22명</option>
+                    <option value="23">23명</option><option value="24">24명</option><option value="25">25명</option>
+                    <option value="26">26명</option><option value="27">27명</option><option value="28">28명</option>
+                    <option value="29">29명</option><option value="30" selected>30명</option>
+                </select>
+                <div class="scroll-box">
+                    <table class="student-table">
+                        <thead><tr><th style="width:42px;">번호</th><th>이름</th><th style="width:42px;">번호</th><th>이름</th></tr></thead>
+                        <tbody id="name-inputs"></tbody>
+                    </table>
+                </div>
+            </div>
+            <button class="btn-save" onclick="saveAll()">💾 저장 및 적용</button>
+        </div>
+
+        <!-- 시간표 탭 -->
+        <div id="tab-schedule" class="tab-content">
+            <div class="panel">
+                <label>오늘 시간표 설정 &nbsp;<span style="font-weight:normal;color:#90afc5;">— 저장 시 알림판에 즉시 반영</span></label>
+                <table class="schedule-table">
+                    <thead><tr><th>교시</th><th>시작</th><th>종료</th><th>과목명</th></tr></thead>
+                    <tbody id="schedule-inputs"></tbody>
+                </table>
+            </div>
+            <button class="btn-save" onclick="saveSchedule()">📡 시간표 저장 → 알림판 반영</button>
+        </div>
+    </div>
+
+    <!-- 호출 영역 -->
+    <div id="call-area">
+        <div id="status-bar">대기 중</div>
+        <div id="student-buttons" class="grid">
+            <div class="empty-msg">⚙️ 설정에서 학생 명단을 입력하세요</div>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyA4CV81dEy5TTNTKsx59tEohrH9VxrEAU4",
+    authDomain: "scall-87336.firebaseapp.com",
+    databaseURL: "https://scall-87336-default-rtdb.firebaseio.com",
+    projectId: "scall-87336",
+    storageBucket: "scall-87336.firebasestorage.app",
+    messagingSenderId: "1016103432774",
+    appId: "1:1016103432774:web:0f6ffda8d91e6c3fe99047"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const DEFAULT_SCHEDULE = [
+    { period:1, s:"08:50", e:"09:35", subject:"" },
+    { period:2, s:"09:45", e:"10:30", subject:"" },
+    { period:3, s:"10:40", e:"11:25", subject:"" },
+    { period:4, s:"11:35", e:"12:20", subject:"" },
+    { period:5, s:"13:20", e:"14:05", subject:"" },
+    { period:6, s:"14:15", e:"15:00", subject:"" }
+];
+
+let currentCallingName = null;
+
+// ── 설정 토글 ──
+function toggleSettings() {
+    const w = document.getElementById('settings-wrap');
+    const isHidden = w.style.display === 'none';
+    w.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) loadSettingsUI();
+}
+
+function switchTab(id, btnId) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById(btnId).classList.add('active');
+}
+
+// ── 학생 이름 입력 테이블 ──
+function renderNameInputs(names) {
+    const count = parseInt(document.getElementById('sel-count').value);
+    const data = names || [];
+    const tbody = document.getElementById('name-inputs');
+    tbody.innerHTML = '';
+    const half = Math.ceil(count / 2);
+    for (let r = 0; r < half; r++) {
+        const l = r + 1;
+        const ri = r + 1 + half;
+        let row = `<tr>
+            <td>${l}</td>
+            <td><input type="text" id="s${l}" placeholder="${l}번 이름" value="${(data[l-1]||'')}"></td>`;
+        if (ri <= count) {
+            row += `<td>${ri}</td><td><input type="text" id="s${ri}" placeholder="${ri}번 이름" value="${(data[ri-1]||'')}"></td>`;
+        } else {
+            row += `<td></td><td></td>`;
+        }
+        row += `</tr>`;
+        tbody.innerHTML += row;
+    }
+}
+
+// ── 시간표 입력 테이블 ──
+function renderScheduleInputs() {
+    const saved = JSON.parse(localStorage.getItem('schedule') || 'null') || DEFAULT_SCHEDULE;
+    const tbody = document.getElementById('schedule-inputs');
+    tbody.innerHTML = '';
+    saved.forEach((item, i) => {
+        tbody.innerHTML += `<tr>
+            <td>${item.period}교시</td>
+            <td><input class="time-input" type="text" id="sch-s${i}" value="${item.s}" placeholder="08:50"></td>
+            <td><input class="time-input" type="text" id="sch-e${i}" value="${item.e}" placeholder="09:35"></td>
+            <td><input type="text" id="sch-subj${i}" value="${item.subject}" placeholder="과목명"></td>
+        </tr>`;
+    });
+}
+
+function loadSettingsUI() {
+    document.getElementById('sel-grade').value = localStorage.getItem('grade') || '3';
+    updateClassOptions();
+    document.getElementById('sel-count').value = localStorage.getItem('count') || '30';
+    renderNameInputs();
+    renderScheduleInputs();
+}
+
+// ── 엑셀 업로드 → 전체 학반 Firebase 저장 ──
+// 열 매핑: B=1-1, C=1-2, D=1-3, E=1-4, F=1-5,
+//          G=2-1, H=2-2, I=2-3, J=2-4, K=2-5, L=2-6,
+//          M=3-1, N=3-2, O=3-3, P=3-4, Q=3-5, R=3-6
+const COL_MAP = [
+    '1-1','1-2','1-3','1-4','1-5',
+    '2-1','2-2','2-3','2-4','2-5','2-6',
+    '3-1','3-2','3-3','3-4','3-5','3-6'
+];
+
+function uploadExcel() {
+    const file = document.getElementById('excel-file').files[0];
+    if (!file) { alert('파일을 선택하세요.'); return; }
+    const status = document.getElementById('upload-status');
+    status.textContent = '⏳ 처리 중...';
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const wb = XLSX.read(e.target.result, { type: 'array' });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+            const allData = {}; // { '1-1': ['김민준', ...], ... }
+            COL_MAP.forEach((roomKey, colIdx) => {
+                const names = [];
+                rows.forEach(row => {
+                    const val = (row[colIdx + 1] || '').toString().trim(); // B열=index 1
+                    if (val) names.push(val);
+                });
+                allData[roomKey] = names;
+            });
+
+            // Firebase에 전체 저장
+            const updates = {};
+            Object.entries(allData).forEach(([roomKey, names]) => {
+                const [g, c] = roomKey.split('-');
+                updates[`rooms/${roomKey}/students`] = names;
+                updates[`rooms/${roomKey}/info`] = { grade: g, cls: c, count: names.length };
+            });
+
+            db.ref().update(updates).then(() => {
+                status.innerHTML = `✅ 업로드 완료! 총 ${COL_MAP.length}개 반 저장됨`;
+                status.style.color = '#2e7d32';
+                // 현재 선택된 반 명단 새로 로드
+                loadStudentsFromFirebase();
+            }).catch(err => {
+                status.textContent = '❌ Firebase 저장 실패: ' + err.message;
+                status.style.color = '#c62828';
+            });
+        } catch(err) {
+            status.textContent = '❌ 파일 읽기 실패: ' + err.message;
+            status.style.color = '#c62828';
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// ── Firebase에서 해당 반 학생 불러오기 ──
+function loadStudentsFromFirebase() {
+    const grade = document.getElementById('sel-grade').value;
+    const cls = document.getElementById('sel-class').value;
+    if (!cls) return;
+    const roomId = `${grade}-${cls}`;
+    db.ref(`rooms/${roomId}/students`).once('value', snap => {
+        const names = snap.val();
+        if (names && names.length > 0) {
+            // 학생 수 드롭다운 업데이트
+            const count = names.length;
+            const countSel = document.getElementById('sel-count');
+            countSel.value = count <= 30 ? count : 30;
+            // 이름 입력 테이블 렌더 후 값 채우기
+            renderNameInputs(names);
+        } else {
+            renderNameInputs([]);
+        }
+    });
+}
+
+// ── 저장 (수동 입력 or 수정 후) ──
+function saveAll() {
+    const grade = document.getElementById('sel-grade').value;
+    const cls = document.getElementById('sel-class').value;
+    const count = parseInt(document.getElementById('sel-count').value);
+    localStorage.setItem('grade', grade);
+    localStorage.setItem('cls', cls);
+    localStorage.setItem('count', count);
+
+    const names = [];
+    for (let i = 1; i <= count; i++) {
+        names.push((document.getElementById(`s${i}`)?.value || '').trim());
+    }
+
+    const roomId = `${grade}-${cls}`;
+    // Firebase에 학생 + info 저장
+    db.ref(`rooms/${roomId}/students`).set(names);
+    db.ref(`rooms/${roomId}/info`).set({ grade, cls, count });
+
+    renderCallButtons();
+    alert(`${grade}학년 ${cls}반 저장 완료!`);
+}
+
+function saveSchedule() {
+    const base = JSON.parse(localStorage.getItem('schedule') || 'null') || DEFAULT_SCHEDULE;
+    const schedule = base.map((item, i) => ({
+        period: item.period,
+        s: document.getElementById(`sch-s${i}`).value.trim(),
+        e: document.getElementById(`sch-e${i}`).value.trim(),
+        subject: document.getElementById(`sch-subj${i}`).value.trim()
+    }));
+    localStorage.setItem('schedule', JSON.stringify(schedule));
+    const roomId = getRoomId();
+    db.ref(`rooms/${roomId}/schedule`).set(schedule);
+    alert('시간표가 알림판에 반영됩니다!');
+}
+
+function getRoomId() {
+    return `${localStorage.getItem('grade')||'3'}-${localStorage.getItem('cls')||'6'}`;
+}
+
+// ── 호출 버튼 ──
+function renderCallButtons() {
+    const grade = localStorage.getItem('grade') || '3';
+    const cls = localStorage.getItem('cls') || '6';
+    const roomId = `${grade}-${cls}`;
+
+    db.ref(`rooms/${roomId}/students`).once('value', snap => {
+        const names = snap.val() || [];
+        const container = document.getElementById('student-buttons');
+        container.innerHTML = '';
+        let hasAny = false;
+        names.forEach((name, i) => {
+            if (!name || !name.trim()) return;
+            hasAny = true;
+            const num = i + 1;
+            const btn = document.createElement('button');
+            btn.className = 'btn-student';
+            btn.id = `btn-${num}`;
+            btn.innerHTML = `<span class="num">${num}번</span>${name.trim()}`;
+            btn.onclick = () => callStudent(num, name.trim());
+            container.appendChild(btn);
+        });
+        if (!hasAny) container.innerHTML = '<div class="empty-msg">⚙️ 설정에서 학생 명단을 입력하세요</div>';
+        listenCallStatus();
+    });
+}
+
+function callStudent(num, name) {
+    const roomId = getRoomId();
+    if (currentCallingName === name) {
+        db.ref(`rooms/${roomId}/call`).set({ status: 'idle' });
+        return;
+    }
+    db.ref(`rooms/${roomId}/call`).set({ name, num, status: 'calling', time: Date.now() });
+}
+
+function listenCallStatus() {
+    const roomId = getRoomId();
+    db.ref(`rooms/${roomId}/call`).on('value', snap => {
+        const data = snap.val();
+        const bar = document.getElementById('status-bar');
+        document.querySelectorAll('.btn-student.calling').forEach(b => b.classList.remove('calling'));
+        if (data && data.status === 'calling' && data.name) {
+            currentCallingName = data.name;
+            bar.textContent = `📢 호출 중: ${data.num}번 ${data.name}`;
+            bar.style.background = 'rgba(255,100,100,0.22)';
+            const btn = document.getElementById(`btn-${data.num}`);
+            if (btn) btn.classList.add('calling');
+        } else {
+            currentCallingName = null;
+            bar.textContent = '대기 중';
+            bar.style.background = 'rgba(255,255,255,0.4)';
+        }
+    });
+}
+
+// ── 학교 학반 구조 ──
+const SCHOOL_STRUCTURE = { '1': 5, '2': 6, '3': 6 };
+
+function updateClassOptions() {
+    const grade = document.getElementById('sel-grade').value;
+    const maxClass = SCHOOL_STRUCTURE[grade] || 6;
+    const savedCls = localStorage.getItem('cls') || '6';
+    const sel = document.getElementById('sel-class');
+    sel.innerHTML = '';
+    for (let i = 1; i <= maxClass; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `${i}반`;
+        if (String(i) === String(savedCls)) opt.selected = true;
+        sel.appendChild(opt);
+    }
+}
+
+// 초기 학반 옵션 세팅 후 버튼 렌더
+document.getElementById('sel-grade').value = localStorage.getItem('grade') || '3';
+updateClassOptions();
+renderCallButtons();
+</script>
+</body>
+</html>
