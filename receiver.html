@@ -2,144 +2,361 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>인천동양중학교 학생 호출 시스템</title>
+    <title>학생 호출 알림판</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: 'Noto Sans KR', sans-serif; 
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
-            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: transparent;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            display: flex;
         }
 
-        #title-bar {
-            display: flex; justify-content: center; align-items: center; gap: 20px;
-            padding: 16px 30px; background: rgba(255,255,255,0.4); backdrop-filter: blur(10px);
-            border-bottom: 2px solid rgba(255,255,255,0.6); flex-shrink: 0;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        #left-transparent {
+            flex: 1;
+            background: transparent;
+            -webkit-app-region: drag;
+            pointer-events: none;
         }
-        #title-text { font-size: 1.4rem; font-weight: 900; color: #546e7a; letter-spacing: 1px; }
-        #room-selector { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.7); padding: 5px 10px; border-radius: 12px; border: 1.5px solid rgba(142,197,252,0.8); }
-        #room-selector select { border: none; font-size: 1.1rem; font-weight: 700; color: #1565c0; background: transparent; cursor: pointer; outline: none; font-family: 'Noto Sans KR', sans-serif; }
 
-        #main { flex: 1; display: flex; align-items: stretch; padding: 0 30px 20px; gap: 24px; min-height: 0; }
+        #right-widget {
+            width: 50%;
+            height: 100vh;
+            background: rgba(245, 247, 250, 0.93);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            padding: 28px 28px;
+            border-left: 1px solid rgba(255,255,255,0.6);
+            box-shadow: -8px 0 30px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
 
-        #left { flex: 1.1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        #clock { font-size: clamp(4rem, 8vw, 7rem); font-weight: 900; color: #37474f; text-shadow: 2px 4px 12px rgba(0,0,0,0.1); letter-spacing: -1px; line-height: 1; }
-        #date-label { margin-top: 14px; font-size: 1.3rem; color: #78909c; font-weight: 700; }
+        /* 학급 선택 */
+        #room-selector {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 20px; flex-shrink: 0;
+        }
+        #room-label { font-size: 0.8rem; color: #90a4ae; font-weight: 700; }
+        #room-selector select {
+            border: none; border-radius: 8px; padding: 6px 10px;
+            background: rgba(255,255,255,0.85); color: #1565c0;
+            font-weight: 700; cursor: pointer; outline: none;
+            font-family: 'Noto Sans KR', sans-serif; font-size: 0.9rem;
+        }
 
-        #right { flex: 0.85; display: flex; flex-direction: column; justify-content: center; padding: 20px 0; }
-        #schedule-title { font-size: 1.2rem; font-weight: 900; color: #546e7a; margin-bottom: 12px; display: flex; justify-content: space-between; }
+        /* 알림 박스 - 위젯 전체 덮기 */
+        #alert-box {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px 30px;
+            z-index: 100;
+            border-radius: 0;
+        }
+        #alert-box.call-alert {
+            background: rgba(255, 80, 80, 0.96);
+            animation: alertPulse 1.5s infinite;
+        }
+        #alert-box.notice-alert {
+            background: rgba(255, 150, 30, 0.96);
+            animation: alertPulse 1.5s infinite;
+        }
+        @keyframes alertPulse { 0%,100% { opacity:1; } 50% { opacity:0.85; } }
+        #alert-title { font-size: 1rem; font-weight: 700; color: rgba(255,255,255,0.85); margin-bottom: 16px; }
+        #alert-students { font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 900; color: white; line-height: 1.4; text-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        #alert-errand { font-size: clamp(1.5rem, 3vw, 2.2rem); color: rgba(255,255,255,0.95); margin-top: 16px; font-weight: 900; text-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        #alert-confirm {
+            margin-top: 30px; padding: 14px 36px;
+            border: 2px solid rgba(255,255,255,0.7);
+            border-radius: 50px;
+            background: rgba(255,255,255,0.25); color: white;
+            font-weight: 900; cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif; font-size: 1rem;
+            transition: 0.2s; backdrop-filter: blur(5px);
+        }
+        #alert-confirm:hover { background: rgba(255,255,255,0.4); }
+
+        /* 시계 - 중앙정렬 */
+        #clock-section {
+            flex-shrink: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #clock {
+            font-size: clamp(3.5rem, 7vw, 5.5rem);
+            font-weight: 900;
+            color: #37474f;
+            letter-spacing: -2px;
+            line-height: 1;
+        }
+        #date-label {
+            margin-top: 8px;
+            font-size: 1rem;
+            color: #78909c;
+            font-weight: 700;
+        }
+
+        .divider {
+            width: 100%; height: 1.5px;
+            background: rgba(195,207,226,0.5);
+            margin: 0 0 20px 0; flex-shrink: 0;
+        }
+
+        /* 시간표 */
+        #schedule-section { overflow-y: auto; }
+        #notice-section { flex-shrink: 0; margin-top: 12px; }
+        #schedule-title {
+            font-size: 1rem; font-weight: 900; color: #546e7a;
+            margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
         #today-day { color: #1976d2; }
-        
-        .period-row { display: flex; align-items: center; padding: 12px 18px; border-radius: 14px; margin-bottom: 8px; transition: all 0.3s; background: rgba(255,255,255,0.45); border: 1.5px solid rgba(255,255,255,0.6); }
-        .period-row.current { background: rgba(142,197,252,0.55); border-color: rgba(142,197,252,0.9); box-shadow: 0 4px 16px rgba(142,197,252,0.35); transform: scale(1.02); }
-        .period-row.past { opacity: 0.42; }
-        .period-num { font-size: 0.9rem; font-weight: 700; color: #78909c; width: 48px; flex-shrink: 0; }
+
+        .period-row {
+            display: flex; align-items: center;
+            padding: 10px 14px; border-radius: 12px;
+            margin-bottom: 7px; transition: all 0.3s;
+            background: rgba(255,255,255,0.7);
+            border: 1.5px solid rgba(255,255,255,0.8);
+        }
+        .period-row.current {
+            background: rgba(142,197,252,0.45);
+            border-color: rgba(142,197,252,0.9);
+            box-shadow: 0 3px 12px rgba(142,197,252,0.3);
+            transform: scale(1.02);
+        }
+        .period-row.past { opacity: 0.38; }
+        .period-num { font-size: 0.82rem; font-weight: 700; color: #78909c; width: 44px; flex-shrink: 0; }
         .period-row.current .period-num { color: #1565c0; }
-        .period-subject { font-size: 1.25rem; font-weight: 700; color: #37474f; flex: 1; }
-        .period-row.current .period-subject { font-size: 1.4rem; color: #0d47a1; }
-        .period-time { font-size: 0.85rem; color: #90a4ae; text-align: right; flex-shrink: 0; }
+        .period-subject { font-size: 1.1rem; font-weight: 700; color: #37474f; flex: 1; }
+        .period-row.current .period-subject { color: #0d47a1; font-size: 1.2rem; }
+        .period-time { font-size: 0.78rem; color: #90a4ae; text-align: right; flex-shrink: 0; }
         .period-row.current .period-time { color: #1976d2; font-weight: 900; }
-        .now-badge { display: none; background: #1976d2; color: white; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-left: 10px; flex-shrink: 0; }
+        .now-badge {
+            display: none; background: #1976d2; color: white;
+            font-size: 0.65rem; font-weight: 700; padding: 2px 7px;
+            border-radius: 20px; margin-left: 8px; flex-shrink: 0;
+        }
         .period-row.current .now-badge { display: inline-block; }
 
-        /* 토스트 (수업 중 호출) */
-        #toast {
-            position: fixed; bottom: 36px; right: 36px;
-            background: rgba(255,255,255,0.85); backdrop-filter: blur(15px);
-            color: #333; padding: 26px 32px; border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.9);
-            border-left: 10px solid #8ec5fc; display: none; z-index: 1000; min-width: 260px;
-        }
-        #toast.show { animation: slideUp 0.45s ease-out; }
-        #toast.notice-style { border-left-color: #ffa726; }
-        @keyframes slideUp { from { transform: translateY(80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        /* 풀스크린 오버레이 (쉬는 시간 호출) */
-        #overlay {
-            position: fixed; inset: 0; background: rgba(255,107,107,0.88);
-            backdrop-filter: blur(15px); display: none; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 2000;
-            animation: gentleBlink 2s infinite; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        #overlay.notice-overlay { background: rgba(255,160,50,0.88); animation: noticeBlink 2s infinite; }
-        @keyframes gentleBlink { 0%,100% { background: rgba(255,107,107,0.88); } 50% { background: rgba(255,140,140,0.92); } }
-        @keyframes noticeBlink { 0%,100% { background: rgba(255,160,50,0.88); } 50% { background: rgba(255,180,80,0.92); } }
-        #overlay h1 { font-size: clamp(4rem, 10vw, 8rem); margin: 0; }
-        #overlay p { font-size: clamp(1.5rem, 3.5vw, 3rem); margin-top: 12px; }
-        #overlay button {
-            margin-top: 50px; padding: 22px 64px; font-size: 2rem; border-radius: 50px;
-            border: 2px solid rgba(255,255,255,0.8); background: rgba(255,255,255,0.3);
-            color: white; cursor: pointer; font-weight: bold; font-family: 'Noto Sans KR', sans-serif;
-            backdrop-filter: blur(5px); transition: 0.3s;
-        }
-        #overlay button:hover { background: rgba(255,255,255,0.5); transform: scale(1.05); }
-
-        /* 소리 꺼짐 안내 */
         #sound-off-badge {
-            position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.55); color: white; font-size: 0.85rem; font-weight: 700;
-            padding: 6px 18px; border-radius: 20px; display: none; z-index: 3000;
+            position: fixed; bottom: 16px; right: 16px;
+            background: rgba(0,0,0,0.5); color: white;
+            font-size: 0.8rem; font-weight: 700;
+            padding: 5px 14px; border-radius: 20px; display: none;
         }
 
-        #unlock-screen {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(10px);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9999; color: white; cursor: pointer;
+        /* 설정 버튼 */
+        #settings-btn {
+            position: absolute; top: 12px; right: 12px;
+            background: rgba(255,255,255,0.5); border: none;
+            border-radius: 8px; padding: 5px 10px;
+            cursor: pointer; font-size: 0.8rem; color: #546e7a;
+            font-family: 'Noto Sans KR', sans-serif; font-weight: 700;
+            z-index: 50;
+        }
+        #settings-btn:hover { background: rgba(255,255,255,0.8); }
+
+        /* 설정창 */
+        #settings-panel {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(245,247,250,0.98);
+            z-index: 200;
+            flex-direction: column;
+            padding: 28px;
+            overflow-y: auto;
+        }
+        #settings-panel.open { display: flex; }
+        .setting-group { margin-bottom: 20px; }
+        .setting-label { font-size: 0.85rem; font-weight: 700; color: #546e7a; margin-bottom: 8px; display: block; }
+        .setting-input {
+            width: 100%; border: none; border-radius: 10px;
+            padding: 10px 12px; background: rgba(255,255,255,0.85);
+            color: #333; outline: none;
+            font-family: 'Noto Sans KR', sans-serif; font-size: 0.9rem;
+        }
+        .setting-row { display: flex; gap: 8px; align-items: center; }
+        .btn-setting-save {
+            padding: 12px; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, #8ec5fc, #e0c3fc);
+            color: #334e68; font-weight: 900; cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif; font-size: 0.9rem;
+            width: 100%; margin-top: 8px;
+        }
+        .btn-setting-close {
+            padding: 10px; border: none; border-radius: 10px;
+            background: rgba(100,116,139,0.2); color: #546e7a;
+            font-weight: 700; cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif; font-size: 0.85rem;
+            width: 100%; margin-top: 6px;
+        }
+
+        /* 공지사항 */
+        #notice-title-bar {
+            font-size: 1rem; font-weight: 900; color: #546e7a;
+            margin-bottom: 8px;
+        }
+        #notice-content {
+            background: rgba(255,255,255,0.7);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: var(--notice-font-size, 1rem);
+            color: #334e68;
+            line-height: 1.7;
+            min-height: 60px;
+            border: 1.5px solid rgba(255,255,255,0.8);
+            white-space: pre-wrap;
+        }
+        #notice-content.empty { color: #b0c4d8; font-style: italic; }
+
+        /* 학급 미선택 안내 */
+        #no-room-msg {
+            display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            flex: 1; color: #90a4ae; font-size: 1rem; font-weight: 700;
+            text-align: center; gap: 8px;
         }
     </style>
 </head>
 <body>
 
-<div id="unlock-screen" onclick="unlockAudio()">
-    <h2 style="font-size:2.8rem; margin-bottom:14px;">🔊 화면을 클릭해서 시작</h2>
-    <p style="font-size:1.3rem; opacity:0.75;">소리 알림을 활성화합니다</p>
-</div>
+<div id="left-transparent"></div>
 
-<div id="title-bar">
-    <span id="title-text">인천동양중학교 학생 호출 알림판</span>
-    <div id="room-selector">
-        <select id="rcv-grade" onchange="updateRcvClassOptions()">
-            <option value="1">1학년</option><option value="2">2학년</option><option value="3" selected>3학년</option>
-        </select>
-        <select id="rcv-class" onchange="applyRoomChange()"></select>
+<div id="right-widget">
+
+    <!-- 설정 버튼 -->
+    <button id="settings-btn" onclick="toggleSettings()">⚙️ 설정</button>
+
+    <!-- 설정창 -->
+    <div id="settings-panel">
+        <h3 style="color:#334e68; margin-bottom:20px; font-size:1.1rem;">⚙️ 리시버 설정</h3>
+
+        <div class="setting-group">
+            <label class="setting-label">위젯 너비 (%)</label>
+            <div class="setting-row">
+                <input type="number" id="set-width" class="setting-input" min="20" max="80" value="40" style="width:80px;">
+                <span style="font-size:0.85rem; color:#90a4ae;">% (20~80)</span>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <label class="setting-label">공지사항 글씨 크기</label>
+            <div class="setting-row">
+                <input type="number" id="set-font-size" class="setting-input" min="10" max="40" step="1" value="16" style="width:80px;">
+                <span style="font-size:0.85rem; color:#90a4ae;">px</span>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <label class="setting-label">📅 시간표 수정 (오늘 요일)</label>
+            <div id="schedule-edit-area"></div>
+        </div>
+
+        <button class="btn-setting-save" onclick="saveSettings()">💾 저장</button>
+        <!-- 토글 설정 -->
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.6); border-radius:12px; padding:12px 16px;">
+                <span style="font-size:0.88rem; font-weight:700; color:#334e68;">🔊 알림 소리</span>
+                <label style="position:relative; display:inline-block; width:46px; height:26px; cursor:pointer;">
+                    <input type="checkbox" id="toggle-sound" onchange="toggleSound(this.checked)"
+                        style="opacity:0; width:0; height:0; position:absolute;">
+                    <span id="toggle-sound-track" style="position:absolute; top:0; left:0; right:0; bottom:0; border-radius:26px; background:#ccc; transition:0.3s;">
+                        <span id="toggle-sound-thumb" style="position:absolute; width:20px; height:20px; border-radius:50%; background:white; top:3px; left:3px; transition:0.3s; box-shadow:0 1px 4px rgba(0,0,0,0.2);"></span>
+                    </span>
+                </label>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.6); border-radius:12px; padding:12px 16px;">
+                <span style="font-size:0.88rem; font-weight:700; color:#334e68;">📌 항상 위에 표시</span>
+                <label style="position:relative; display:inline-block; width:46px; height:26px; cursor:pointer;">
+                    <input type="checkbox" id="toggle-ontop" onchange="toggleAlwaysOnTop(this.checked)"
+                        style="opacity:0; width:0; height:0; position:absolute;">
+                    <span id="toggle-ontop-track" style="position:absolute; top:0; left:0; right:0; bottom:0; border-radius:26px; background:#ccc; transition:0.3s;">
+                        <span id="toggle-ontop-thumb" style="position:absolute; width:20px; height:20px; border-radius:50%; background:white; top:3px; left:3px; transition:0.3s; box-shadow:0 1px 4px rgba(0,0,0,0.2);"></span>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn-setting-close" onclick="toggleSettings()">← 닫기</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.6); border-radius:12px; padding:12px 16px; margin-top:4px;">
+            <span style="font-size:0.88rem; font-weight:700; color:#334e68;">🟢 PC 시작 시 자동 실행</span>
+            <label style="position:relative; display:inline-block; width:46px; height:26px; cursor:pointer;">
+                <input type="checkbox" id="toggle-autostart" onchange="toggleAutoStart(this.checked)"
+                    style="opacity:0; width:0; height:0; position:absolute;">
+                <span id="toggle-autostart-track" style="position:absolute; top:0; left:0; right:0; bottom:0; border-radius:26px; background:#ccc; transition:0.3s;">
+                    <span id="toggle-autostart-thumb" style="position:absolute; width:20px; height:20px; border-radius:50%; background:white; top:3px; left:3px; transition:0.3s; box-shadow:0 1px 4px rgba(0,0,0,0.2);"></span>
+                </span>
+            </label>
+        </div>
+        <button onclick="quitApp()" style="padding:11px; border:none; border-radius:12px; background:rgba(220,50,50,0.15); color:#c00; font-weight:900; cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem; margin-top:4px; transition:0.2s;" onmouseover="this.style.background='rgba(220,50,50,0.28)'" onmouseout="this.style.background='rgba(220,50,50,0.15)'">🔴 프로그램 종료</button>
+        <div style="text-align:center; font-size:0.72rem; color:#b0c4d8; margin-top:10px;">Developed by 인천동양중학교 김호성</div>
     </div>
-</div>
 
-<div id="main">
-    <div id="left">
-        <div id="clock">00:00:00</div>
+    <!-- 학급 선택 -->
+    <div id="room-selector">
+        <span id="room-label">학급 선택:</span>
+        <select id="rcv-grade" onchange="updateRcvClassOptions()">
+            <option value="" disabled selected>학년</option>
+            <option value="1">1학년</option>
+            <option value="2">2학년</option>
+            <option value="3">3학년</option>
+        </select>
+        <select id="rcv-class" onchange="applyRoomChange()">
+            <option value="" disabled selected>반</option>
+        </select>
+    </div>
+
+    <!-- 알림 박스 -->
+    <div id="alert-box">
+        <div id="alert-title">🔔 학생 호출</div>
+        <div id="alert-students"></div>
+        <div id="alert-errand"></div>
+        <button id="alert-confirm" onclick="clearCall()">확인했습니다</button>
+    </div>
+
+    <!-- 시계 -->
+    <div id="clock-section">
+        <div id="clock">00:00</div>
         <div id="date-label"></div>
     </div>
-    <div id="right">
+
+    <div class="divider"></div>
+
+    <!-- 시간표 -->
+    <div id="schedule-section">
         <div id="schedule-title">
             <span>📋 시간표</span>
-            <span id="today-day">월요일</span>
+            <span id="today-day"></span>
         </div>
-        <div id="schedule-list"><div style="color:#90a4ae; padding:10px 0;">시간표를 불러오는 중...</div></div>
+        <div id="schedule-list">
+            <div style="color:#90a4ae; padding:10px 0; font-size:0.9rem;">학급을 선택하면 시간표가 표시됩니다</div>
+        </div>
     </div>
+
+    <!-- 공지사항 -->
+    <div id="notice-section">
+        <div class="divider" style="margin:10px 0 8px 0;"></div>
+        <div id="notice-title-bar">📢 우리 반 공지사항</div>
+        <div id="notice-content" class="empty">공지사항이 없습니다</div>
+    </div>
+
 </div>
 
-<!-- 토스트 -->
-<div id="toast">
-    <h2 style="margin:0 0 10px; color:#4a90e2; font-size:1.05rem;" id="t-title">🔔 학생 호출</h2>
-    <div id="t-students" style="font-size:1.4rem; font-weight:bold; line-height:1.6;"></div>
-    <div id="t-errand" style="font-size:1.1rem; color:#607d8b; margin-top:6px;"></div>
 </div>
 
-<!-- 풀스크린 오버레이 -->
-<div id="overlay">
-    <div id="f-students" style="font-size:clamp(3rem,8vw,7rem); font-weight:900; margin:0; line-height:1.2; text-align:center;"></div>
-    <div id="f-errand" style="font-size:clamp(1.5rem,3.5vw,2.8rem); margin-top:16px; opacity:0.95;"></div>
-    <button onclick="clearCall()">네, 확인했습니다!</button>
-</div>
+<div id="sound-off-badge">🔇 알림음 종료</div>
 
-<!-- 소리 꺼짐 배지 -->
-<div id="sound-off-badge">🔇 알림음 종료 (화면은 유지 중)</div>
-
-<audio id="snd-toast" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
-<audio id="snd-full" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3"></audio>
+<!-- 소리는 Web Audio API로 생성 -->
 
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -156,86 +373,163 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const SCHOOL_STRUCTURE = { '1': 5, '2': 6, '3': 6 };
-let roomId = localStorage.getItem('rcv-room') || '3-6';
+const SCHOOL_STRUCTURE = { "1": 5, "2": 6, "3": 6 };
+let roomId = localStorage.getItem("rcv-room") || "";
 let callListenerRef = null, scheduleListenerRef = null;
-let soundOffTimer = null, toastTimer = null;
 
-// ─── 학급 선택 ───
-function updateRcvClassOptions() {
-    const grade = document.getElementById('rcv-grade').value;
-    const maxClass = SCHOOL_STRUCTURE[grade] || 6;
-    const savedCls = (roomId.split('-')[1]) || '6';
-    const sel = document.getElementById('rcv-class');
-    sel.innerHTML = '';
-    for (let i = 1; i <= maxClass; i++) {
-        sel.innerHTML += `<option value="${i}" ${i == savedCls ? 'selected':''}>${i}반</option>`;
+let noticeListenerRef = null;
+let soundOffTimer = null, alertTimer = null;
+
+// 학급 선택 복원
+function initRoomSelector() {
+    const saved = localStorage.getItem("rcv-room");
+    if (saved) {
+        const [g, c] = saved.split("-");
+        document.getElementById("rcv-grade").value = g;
+        updateRcvClassOptions(false); // 반 목록만 채움
+        document.getElementById("rcv-class").value = c;
+        applyRoomChange();
     }
-    applyRoomChange();
+}
+
+function updateRcvClassOptions(triggerChange = true) {
+    const grade = document.getElementById("rcv-grade").value;
+    if (!grade) return;
+    const maxClass = SCHOOL_STRUCTURE[grade] || 6;
+    const sel = document.getElementById("rcv-class");
+    sel.innerHTML = "<option value='' disabled selected>반</option>";
+    for (let i = 1; i <= maxClass; i++) {
+        sel.innerHTML += `<option value="${i}">${i}반</option>`;
+    }
+    if (triggerChange) applyRoomChange();
 }
 
 function applyRoomChange() {
-    roomId = `${document.getElementById('rcv-grade').value}-${document.getElementById('rcv-class').value}`;
-    localStorage.setItem('rcv-room', roomId);
+    const g = document.getElementById("rcv-grade").value;
+    const c = document.getElementById("rcv-class").value;
+    if (!g || !c) return;
+    roomId = `${g}-${c}`;
+    localStorage.setItem("rcv-room", roomId);
     if (callListenerRef) callListenerRef.off();
     if (scheduleListenerRef) scheduleListenerRef.off();
     attachListeners();
 }
 
-const [savedGrade, savedCls] = roomId.split('-');
-document.getElementById('rcv-grade').value = savedGrade || '3';
-updateRcvClassOptions();
+initRoomSelector();
 
-function unlockAudio() {
-    new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=").play().catch(()=>{});
-    document.getElementById('unlock-screen').style.display = 'none';
+// 저장된 토글 상태 복원
+function applyToggleStyle(trackId, thumbId, checked) {
+    const track = document.getElementById(trackId);
+    const thumb = document.getElementById(thumbId);
+    if (!track || !thumb) return;
+    track.style.background = checked ? '#4CAF50' : '#ccc';
+    thumb.style.left = checked ? '23px' : '3px';
 }
 
-// ─── 시계 & 시간표 ───
-let fullWeeklySchedule = {};
-let todaySchedule = [];
-const DAYS = ['일','월','화','수','목','금','토'];
+// 자동시작 상태 불러오기
+if (window.electronAPI && window.electronAPI.getAutoStart) {
+    window.electronAPI.getAutoStart().then(enabled => {
+        document.getElementById("toggle-autostart").checked = enabled;
+        applyToggleStyle("toggle-autostart-track", "toggle-autostart-thumb", enabled);
+    });
+}
 
-function toNum(t) { return parseInt((t||'').replace(':', '')) || 0; }
+const soundOn = localStorage.getItem("rcv-sound") !== "off";
+const ontopOn = localStorage.getItem("rcv-ontop") === "on";
+document.getElementById("toggle-sound").checked = soundOn;
+document.getElementById("toggle-ontop").checked = ontopOn;
+applyToggleStyle("toggle-sound-track", "toggle-sound-thumb", soundOn);
+applyToggleStyle("toggle-ontop-track", "toggle-ontop-thumb", ontopOn);
+// 항상 위에는 시작 시 적용하지 않음 - 알림 올 때만 자동으로 올라옴
+// if (ontopOn && window.electronAPI) window.electronAPI.setAlwaysOnTop(true);
+
+function toggleSound(checked) {
+    localStorage.setItem("rcv-sound", checked ? "on" : "off");
+    applyToggleStyle("toggle-sound-track", "toggle-sound-thumb", checked);
+}
+
+function toggleAlwaysOnTop(checked) {
+    localStorage.setItem("rcv-ontop", checked ? "on" : "off");
+    applyToggleStyle("toggle-ontop-track", "toggle-ontop-thumb", checked);
+    if (window.electronAPI) window.electronAPI.setAlwaysOnTop(checked);
+}
+
+function quitApp() {
+    if (confirm("프로그램을 종료할까요?")) {
+        if (window.electronAPI && window.electronAPI.quit) {
+            window.electronAPI.quit();
+        } else {
+            window.close();
+        }
+    }
+}
+
+function toggleAutoStart(enabled) {
+    applyToggleStyle("toggle-autostart-track", "toggle-autostart-thumb", enabled);
+    if (window.electronAPI && window.electronAPI.setAutoStart) {
+        window.electronAPI.setAutoStart(enabled);
+    }
+}
+
+// 저장된 너비 적용
+const savedWidthPct = parseInt(localStorage.getItem("rcv-width") || "40");
+document.getElementById("right-widget").style.width = savedWidthPct + "%";
+document.getElementById("left-transparent").style.flex = "none";
+document.getElementById("left-transparent").style.width = (100 - savedWidthPct) + "%";
+
+// 저장된 글씨 크기 적용
+const savedFontSize = parseInt(localStorage.getItem("rcv-font-size") || "16");
+document.documentElement.style.setProperty("--notice-font-size", savedFontSize + "px");
+
+// 시계
+const DAYS = ["일","월","화","수","목","금","토"];
+
+
+function toNum(t) { return parseInt((t||"00:00").replace(":","")) || 0; }
 
 function updateClock() {
     const now = new Date();
-    document.getElementById('clock').textContent = now.toLocaleTimeString('ko-KR', { hour12: false });
-    document.getElementById('date-label').textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 (${DAYS[now.getDay()]})`;
+    const h = String(now.getHours()).padStart(2, "0");
+    const m = String(now.getMinutes()).padStart(2, "0");
+    document.getElementById("clock").textContent = `${h}:${m}`;
+    document.getElementById("date-label").textContent =
+        `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 (${DAYS[now.getDay()]})`;
     updateScheduleHighlight();
 }
-setInterval(updateClock, 1000); updateClock();
-
-function getStatus(item) {
-    const now = new Date(), cur = now.getHours() * 100 + now.getMinutes();
-    const s = toNum(item.s), e = toNum(item.e);
-    return (cur >= s && cur <= e) ? 'current' : (cur > e) ? 'past' : 'future';
-}
+setInterval(updateClock, 1000);
+updateClock();
 
 function extractTodaySchedule() {
     let dayIdx = new Date().getDay();
     if (dayIdx === 0 || dayIdx === 6) dayIdx = 1;
-    document.getElementById('today-day').textContent = `[${DAYS[dayIdx]}요일]`;
-    if (Array.isArray(fullWeeklySchedule)) todaySchedule = fullWeeklySchedule;
-    else todaySchedule = fullWeeklySchedule[dayIdx] || [];
+    document.getElementById("today-day").textContent = `[${DAYS[dayIdx]}요일]`;
+    let raw = fullWeeklySchedule[dayIdx] || fullWeeklySchedule[String(dayIdx)] || [];
+    if (raw && !Array.isArray(raw)) raw = Object.values(raw);
+    todaySchedule = (raw || []).filter(item => item && item.period);
     renderSchedule();
 }
 
 function renderSchedule() {
-    const container = document.getElementById('schedule-list');
+    const container = document.getElementById("schedule-list");
     if (!todaySchedule || todaySchedule.length === 0) {
-        container.innerHTML = '<div style="color:#90a4ae; padding:10px 0;">시간표 정보가 없습니다</div>';
+        container.innerHTML = "<div style='color:#90a4ae; padding:10px 0; font-size:0.9rem;'>시간표 정보가 없습니다</div>";
         return;
     }
     container.innerHTML = todaySchedule.map(item => `
         <div class="period-row" id="pr-${item.period}">
             <span class="period-num">${item.period}교시</span>
-            <span class="period-subject">${item.subject || '—'}</span>
+            <span class="period-subject">${item.subject || "—"}</span>
             <span class="period-time">${item.s}–${item.e}</span>
             <span class="now-badge">NOW</span>
         </div>
-    `).join('');
+    `).join("");
     updateScheduleHighlight();
+}
+
+function getStatus(item) {
+    const now = new Date(), cur = now.getHours() * 100 + now.getMinutes();
+    const s = toNum(item.s), e = toNum(item.e);
+    return (cur >= s && cur <= e) ? "current" : (cur > e) ? "past" : "future";
 }
 
 function updateScheduleHighlight() {
@@ -243,124 +537,222 @@ function updateScheduleHighlight() {
         const row = document.getElementById(`pr-${item.period}`);
         if (!row) return;
         const st = getStatus(item);
-        row.className = 'period-row' + (st === 'current' ? ' current' : st === 'past' ? ' past' : '');
+        row.className = "period-row" + (st === "current" ? " current" : st === "past" ? " past" : "");
     });
 }
 
 function getMode() {
     const cur = new Date().getHours() * 100 + new Date().getMinutes();
-    return todaySchedule.some(t => cur >= toNum(t.s) && cur <= toNum(t.e)) ? 'CLASS' : 'BREAK';
+    return todaySchedule.some(t => cur >= toNum(t.s) && cur <= toNum(t.e)) ? "CLASS" : "BREAK";
 }
 
-// ─── 소리 타이머 (10초 후 자동 꺼짐) ───
-function startSoundOffTimer(audioEl) {
+let alarmOscillators = [];
+
+function playAlarmSound(isNotice) {
+    stopAlarmSound();
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const gainNode = ctx.createGain();
+    gainNode.connect(ctx.destination);
+
+    // 알람 패턴: 삐삐삐 반복
+    const pattern = isNotice
+        ? [600, 800, 600]   // 공지: 다른 톤
+        : [880, 880, 880];  // 호출: 경보 톤
+
+    let time = ctx.currentTime;
+    for (let rep = 0; rep < 4; rep++) {
+        pattern.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.connect(g);
+            g.connect(ctx.destination);
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            const start = time + (rep * 1.2) + (i * 0.18);
+            const end = start + 0.15;
+            g.gain.setValueAtTime(0, start);
+            g.gain.linearRampToValueAtTime(0.6, start + 0.02);
+            g.gain.linearRampToValueAtTime(0, end);
+            osc.start(start);
+            osc.stop(end + 0.05);
+            alarmOscillators.push(osc);
+        });
+    }
+    // 10초 후 자동 종료
+    startSoundOffTimer(ctx);
+}
+
+function stopAlarmSound() {
+    alarmOscillators.forEach(o => { try { o.stop(); } catch(e) {} });
+    alarmOscillators = [];
+}
+
+function startSoundOffTimer(ctx) {
     if (soundOffTimer) clearTimeout(soundOffTimer);
     soundOffTimer = setTimeout(() => {
-        audioEl.pause();
-        audioEl.currentTime = 0;
-        // 소리 꺼짐 배지 표시
-        const badge = document.getElementById('sound-off-badge');
-        badge.style.display = 'block';
-        setTimeout(() => badge.style.display = 'none', 3000);
+        stopAlarmSound();
+        const badge = document.getElementById("sound-off-badge");
+        badge.style.display = "block";
+        setTimeout(() => badge.style.display = "none", 3000);
     }, 10000);
 }
 
-// ─── 리스너 ───
 function attachListeners() {
     callListenerRef = db.ref(`rooms/${roomId}/call`);
-    callListenerRef.on('value', snap => {
+    callListenerRef.on("value", snap => {
         const data = snap.val();
-        if (data && (data.status === 'calling' || data.status === 'notice')) {
-            if (data.isNotice) {
-                // 공지 모드: 항상 풀스크린
-                showNoticeOverlay(data);
-            } else {
-                getMode() === 'CLASS' ? showToast(data) : showOverlay(data);
-            }
+        if (data && (data.status === "calling" || data.status === "notice")) {
+            showAlert(data);
         } else {
-            hideAll();
+            hideAlert();
         }
     });
-
     scheduleListenerRef = db.ref(`rooms/${roomId}/schedule`);
-    scheduleListenerRef.on('value', snap => {
+    scheduleListenerRef.on("value", snap => {
         fullWeeklySchedule = snap.val() || {};
         extractTodaySchedule();
     });
+    attachNoticeListener();
 }
 
-// ─── 토스트 (수업 중) ───
-function showToast(data) {
-    if (toastTimer) clearTimeout(toastTimer);
+function showAlert(data) {
+    if (alertTimer) clearTimeout(alertTimer);
     if (soundOffTimer) clearTimeout(soundOffTimer);
-
+    const box = document.getElementById("alert-box");
     const isNotice = data.isNotice;
-    document.getElementById('t-title').textContent = isNotice ? '📣 전체 공지' : '🔔 학생 호출';
-    document.getElementById('t-title').style.color = isNotice ? '#f57c00' : '#4a90e2';
-
-    const toast = document.getElementById('toast');
-    toast.className = 'toast' + (isNotice ? ' notice-style' : '');
-
+    box.className = isNotice ? "notice-alert" : "call-alert";
+    box.style.display = "flex";
+    document.getElementById("alert-title").textContent = isNotice ? "📣 전체 공지" : "🔔 학생 호출";
     if (data.students && data.students.length > 0) {
-        document.getElementById('t-students').innerHTML = data.students.map(s => `${s.num}번 <strong>${s.name}</strong>`).join('<br>');
+        document.getElementById("alert-students").innerHTML =
+            data.students.map(s => `${s.num}번 ${s.name}`).join(" · ");
     } else {
-        document.getElementById('t-students').innerHTML = '';
+        document.getElementById("alert-students").innerHTML = "";
     }
-    document.getElementById('t-errand').textContent = '→ ' + data.errand;
+    document.getElementById("alert-errand").textContent = data.errand;
 
-    toast.style.display = 'block'; toast.classList.add('show');
+    if (localStorage.getItem("rcv-sound") !== "off") {
+        playAlarmSound(isNotice);
+    }
 
-    const snd = document.getElementById('snd-toast');
-    snd.currentTime = 0;
-    snd.play().catch(() => {});
-    startSoundOffTimer(snd);
-
-    toastTimer = setTimeout(clearCall, 15000); // 15초 후 자동 닫힘
+    if (getMode() === "CLASS") {
+        // 수업 중: 소리 10초 후 꺼짐, 알림은 15초 후 사라짐
+        startSoundOffTimer(snd);
+        alertTimer = setTimeout(clearCall, 15000);
+    } else {
+        // 쉬는 시간: 창을 맨 위로 올림
+        if (window.electronAPI && window.electronAPI.setAlwaysOnTop) {
+            window.electronAPI.setAlwaysOnTop(true);
+        }
+    }
 }
 
-// ─── 풀스크린 오버레이 (쉬는 시간 호출) ───
-function showOverlay(data) {
-    document.getElementById('f-students').innerHTML = '📢 ' + data.students.map(s => `${s.num}번 ${s.name}`).join(' · ') + ' 학생!!';
-    document.getElementById('f-errand').textContent = data.errand;
-    const overlay = document.getElementById('overlay');
-    overlay.className = 'overlay'; // 기본 빨간색
-    overlay.style.display = 'flex';
-
-    const snd = document.getElementById('snd-full');
-    snd.currentTime = 0;
-    snd.play().catch(() => {});
-    startSoundOffTimer(snd);
-}
-
-// ─── 공지 오버레이 (항상 풀스크린, 주황색) ───
-function showNoticeOverlay(data) {
-    document.getElementById('f-students').innerHTML = '📣 전체 공지';
-    document.getElementById('f-errand').textContent = data.errand;
-    const overlay = document.getElementById('overlay');
-    overlay.className = 'notice-overlay';
-    overlay.style.display = 'flex';
-
-    const snd = document.getElementById('snd-toast');
-    snd.currentTime = 0;
-    snd.play().catch(() => {});
-    startSoundOffTimer(snd);
-}
-
-function hideAll() {
-    if (toastTimer) clearTimeout(toastTimer);
+function hideAlert() {
+    if (alertTimer) clearTimeout(alertTimer);
     if (soundOffTimer) clearTimeout(soundOffTimer);
-    document.getElementById('toast').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-    document.getElementById('sound-off-badge').style.display = 'none';
-
-    const sndFull = document.getElementById('snd-full');
-    sndFull.pause(); sndFull.currentTime = 0;
-    const sndToast = document.getElementById('snd-toast');
-    sndToast.pause(); sndToast.currentTime = 0;
+    document.getElementById("alert-box").style.display = "none";
+    stopAlarmSound();
+    // 알림 끝나면 alwaysOnTop 해제
+    if (window.electronAPI && window.electronAPI.setAlwaysOnTop) {
+        window.electronAPI.setAlwaysOnTop(false);
+    }
 }
 
 function clearCall() {
-    db.ref(`rooms/${roomId}/call`).set({ status: 'idle' });
+    db.ref(`rooms/${roomId}/call`).set({ status: "idle" });
+}
+
+// ─── 설정창 ───
+function toggleSettings() {
+    const panel = document.getElementById("settings-panel");
+    if (panel.classList.contains("open")) {
+        panel.classList.remove("open");
+    } else {
+        // 현재 너비 불러오기
+        const savedWidth = parseInt(localStorage.getItem("rcv-width") || "40");
+        document.getElementById("set-width").value = savedWidth;
+        // 글씨 크기 불러오기
+        const savedFontSize = parseInt(localStorage.getItem("rcv-font-size") || "16");
+        document.getElementById("set-font-size").value = savedFontSize;
+        // 시간표 편집 영역 렌더
+        renderScheduleEdit();
+        panel.classList.add("open");
+    }
+}
+
+function renderScheduleEdit() {
+    const area = document.getElementById("schedule-edit-area");
+    if (!todaySchedule || todaySchedule.length === 0) {
+        area.innerHTML = "<div style='color:#90a4ae;font-size:0.85rem;'>시간표 데이터가 없습니다</div>";
+        return;
+    }
+    area.innerHTML = todaySchedule.map((item, i) => `
+        <div style="display:flex; gap:6px; align-items:center; margin-bottom:6px;">
+            <span style="font-size:0.8rem;color:#90a4ae;width:40px;flex-shrink:0;">${item.period}교시</span>
+            <input type="text" id="sch-edit-${i}" value="${item.subject||''}"
+                class="setting-input" placeholder="과목명" style="flex:1;">
+        </div>
+    `).join("");
+}
+
+function saveSettings() {
+    // 너비 저장 (전체 화면 기준 %)
+    const widthPercent = Math.min(Math.max(parseInt(document.getElementById("set-width").value) || 40, 20), 90);
+    document.getElementById("set-width").value = widthPercent;
+    localStorage.setItem("rcv-width", widthPercent);
+    // 위젯 너비를 CSS로도 즉시 반영
+    document.getElementById("right-widget").style.width = widthPercent + "%";
+    document.getElementById("left-transparent").style.flex = "none";
+    document.getElementById("left-transparent").style.width = (100 - widthPercent) + "%";
+
+    // 글씨 크기 저장
+    const fontSize = parseInt(document.getElementById("set-font-size").value) || 16;
+    localStorage.setItem("rcv-font-size", fontSize);
+    document.documentElement.style.setProperty("--notice-font-size", fontSize + "px");
+
+    // 시간표 수정 저장
+    if (todaySchedule && todaySchedule.length > 0) {
+        const dayIdx = new Date().getDay() || 1;
+        todaySchedule.forEach((item, i) => {
+            const el = document.getElementById(`sch-edit-${i}`);
+            if (el) item.subject = el.value.trim();
+        });
+        // Firebase에도 저장
+        if (roomId) {
+            const dayData = {};
+            todaySchedule.forEach((item, i) => { dayData[i] = item; });
+            db.ref(`rooms/${roomId}/schedule/${dayIdx}`).set(dayData);
+        }
+        renderSchedule();
+    }
+
+    // 너비 적용 (Electron API 있으면 사용, 없으면 새로고침)
+    if (window.electronAPI) {
+        window.electronAPI.setWidth(widthPercent);
+    }
+
+    alert("저장되었습니다!");
+    toggleSettings();
+}
+
+// ─── 공지사항 ───
+
+
+function attachNoticeListener() {
+    if (!roomId) return;
+    if (noticeListenerRef) noticeListenerRef.off();
+    noticeListenerRef = db.ref(`rooms/${roomId}/classNotice`);
+    noticeListenerRef.on("value", snap => {
+        const data = snap.val();
+        const el = document.getElementById("notice-content");
+        if (data && data.text) {
+            el.textContent = data.text;
+            el.classList.remove("empty");
+        } else {
+            el.textContent = "공지사항이 없습니다";
+            el.classList.add("empty");
+        }
+    });
 }
 </script>
 </body>
