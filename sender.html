@@ -14,9 +14,10 @@
         }
         .container {
             flex: 1; display: flex; flex-direction: column;
-            width: 100%; max-width: 1400px; margin: 0 auto;
+            width: 100%; max-width: 100%; margin: 0 auto;
             background: rgba(255,255,255,0.45); backdrop-filter: blur(15px);
-            padding: 20px 28px;
+            padding: 16px 24px;
+            min-height: 0;
         }
         .header {
             display: flex; justify-content: space-between; align-items: center;
@@ -160,7 +161,13 @@
         .btn-clear:hover { opacity: 0.8; }
 
         /* 설정 화면 */
-        #settings-view { display: none; flex: 1; flex-direction: column; min-height: 0; overflow-y: auto; padding-right: 10px; }
+        #settings-view { display: none; overflow-y: auto; padding-right: 10px; height: 100%; }
+        #tab-timetable { display: none; flex-direction: column !important; }
+        #tab-timetable.active { display: flex !important; flex-direction: column !important; }
+        #tab-timetable > div { display: block !important; flex-direction: column; }
+        #tab-timetable select { width: auto !important; }
+        #tab-timetable label { display: inline !important; }
+        #tab-timetable button[onclick="applySwap()"] { display: block !important; float: none !important; }
         .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
         .tab-btn { padding: 8px 20px; border: none; border-radius: 30px; cursor: pointer; font-weight: bold; font-family: 'Noto Sans KR', sans-serif; background: rgba(255,255,255,0.4); color: #334e68; transition: all 0.2s; }
         .tab-btn.active { background: #8ec5fc; color: white; }
@@ -198,12 +205,17 @@
         <div class="mode-tabs">
             <button class="mode-tab active-student" id="tab-student" onclick="switchMode('student')">👤 학생 호출</button>
             <button class="mode-tab" id="tab-notice" onclick="switchMode('notice')">📣 전체 공지</button>
+            <button class="mode-tab" id="tab-class-notice" onclick="switchMode('class-notice')">📢 우리 반 공지</button>
+            <button class="mode-tab" id="tab-suggest" onclick="switchMode('suggest')">💬 건의사항</button>
         </div>
 
         <div id="status-bar">학생을 선택하고 용무를 골라 호출하세요</div>
 
         <!-- ① 학생 호출 모드 -->
         <div id="student-mode-view" style="flex:1; display:flex; flex-direction:column; min-height:0;">
+            <!-- 선택 미리보기 -->
+            <div id="selected-preview" style="margin-bottom:10px; flex-shrink:0;"><span style="color:#90afc5;">선택된 학생과 용무가 여기에 표시됩니다</span></div>
+
             <!-- 비담임용 범위 선택 -->
             <div class="scope-bar" id="scope-bar">
                 <span style="font-size:0.82rem; font-weight:700; color:#607d8b; align-self:center;">범위:</span>
@@ -215,10 +227,6 @@
             <div class="main-layout">
                 <div class="left-col">
                     <div class="section-title">👤 학생 선택 <span id="selected-count" style="color:#8ec5fc;">(0명)</span></div>
-                    <div class="select-all-bar">
-                        <button class="btn-select-all" onclick="selectAllStudents()">✅ 전체 선택</button>
-                        <button class="btn-select-all" onclick="deselectAllStudents()" style="border-color:rgba(200,100,100,0.5);background:rgba(200,100,100,0.1);color:#7a2020;">✕ 전체 해제</button>
-                    </div>
                     <div class="student-grid" id="student-buttons"></div>
                 </div>
                 <div class="right-col">
@@ -234,50 +242,98 @@
                             <input type="text" id="errand-custom-input" placeholder="용무를 직접 입력하세요" oninput="updatePreview()">
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="call-section">
-                <div id="selected-preview"><span style="color:#90afc5;">선택된 학생과 용무가 여기에 표시됩니다</span></div>
-                <div style="overflow:hidden;">
-                    <button class="btn-call" id="btn-call" onclick="doCall()" disabled>📢 호출하기</button>
-                    <button class="btn-clear" onclick="clearAll()">✕ 초기화</button>
+                    <!-- 호출/초기화 버튼 -->
+                    <div style="margin-top:10px; display:flex; gap:8px;">
+                        <button class="btn-call" id="btn-call" onclick="doCall()" disabled style="flex:1; float:none; width:auto;">📢 호출하기</button>
+                        <button class="btn-clear" onclick="clearAll()" style="float:none; width:auto; padding:15px 18px;">✕ 초기화</button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- ② 전체 공지 모드 -->
         <div id="notice-mode-view" style="flex:1; display:none; flex-direction:column; min-height:0;">
-            <div class="notice-layout">
+            <div class="notice-layout" style="flex:1; min-height:0;">
                 <!-- 공지 대상 -->
-                <div class="notice-target-col">
-                    <div class="section-title">📣 공지 대상</div>
-                    <div class="notice-target-grid" id="notice-targets">
+                <div class="notice-target-col" style="min-height:0; display:flex; flex-direction:column;">
+                    <div class="section-title" style="flex-shrink:0;">📣 공지 대상</div>
+                    <div class="notice-target-grid" id="notice-targets" style="flex:1; overflow-y:auto; min-height:0;">
                         <!-- JS로 렌더 -->
                     </div>
                 </div>
-                <!-- 공지 메시지 -->
-                <div class="notice-msg-col">
-                    <div class="section-title">✏️ 공지 메시지</div>
-                    <textarea id="notice-text" placeholder="공지할 내용을 입력하세요&#10;&#10;예) 오늘 5교시 수업은 강당으로 이동합니다." oninput="updateNoticePreview()"></textarea>
+                <!-- 공지 메시지 + 버튼 -->
+                <div class="notice-msg-col" style="display:flex; flex-direction:column; min-height:0;">
+                    <div class="section-title" style="flex-shrink:0;">✏️ 공지 메시지</div>
+                    <textarea id="notice-text" placeholder="공지할 내용을 입력하세요&#10;&#10;예) 오늘 5교시 수업은 강당으로 이동합니다." oninput="updateNoticePreview()" style="flex:1; min-height:0;"></textarea>
+                    <!-- 미리보기 -->
+                    <div id="notice-preview" style="margin-top:10px; background:rgba(255,255,255,0.4); border-radius:12px; padding:10px 14px; font-size:0.85rem; color:#334e68; display:flex; flex-wrap:wrap; gap:6px; align-items:center; flex-shrink:0;"><span style="color:#90afc5;">공지 대상과 메시지를 입력하세요</span></div>
+                    <!-- 버튼 -->
+                    <div style="margin-top:10px; display:flex; gap:8px; flex-shrink:0;">
+                        <button class="btn-call notice-mode" id="btn-notice-send" onclick="doNotice()" disabled style="flex:1; float:none; width:auto;">📣 공지 보내기</button>
+                        <button class="btn-clear" onclick="clearNotice()" style="float:none; width:auto; padding:15px 18px;">✕ 초기화</button>
+                    </div>
                 </div>
             </div>
-            <div class="call-section">
-                <div id="notice-preview"><span style="color:#90afc5;">공지 대상과 메시지를 입력하세요</span></div>
-                <div style="overflow:hidden;">
-                    <button class="btn-call notice-mode" id="btn-notice-send" onclick="doNotice()" disabled>📣 공지 보내기</button>
-                    <button class="btn-clear" onclick="clearNotice()">✕ 초기화</button>
+        </div>
+        <!-- ③ 우리 반 공지사항 모드 -->
+        <div id="class-notice-mode-view" style="flex:1; display:none; flex-direction:column; min-height:0; gap:12px;">
+            <div style="display:flex; gap:12px; flex:1; min-height:0;">
+                <!-- 현재 공지 -->
+                <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+                    <div class="section-title">📋 현재 우리 반 공지사항</div>
+                    <div id="class-notice-current" style="flex:1; background:rgba(255,255,255,0.5); border-radius:14px; padding:16px; font-size:0.9rem; color:#334e68; line-height:1.7; overflow-y:auto; border:1.5px solid rgba(255,255,255,0.7);">불러오는 중...</div>
+                </div>
+                <!-- 작성 -->
+                <div style="width:320px; display:flex; flex-direction:column; gap:10px; flex-shrink:0;">
+                    <div class="section-title">✏️ 공지사항 수정</div>
+                    <textarea id="class-notice-text" placeholder="공지사항을 입력하세요&#10;&#10;예) 오늘 체육복 지참하세요." style="flex:1; border:none; border-radius:10px; padding:12px; background:rgba(255,255,255,0.7); color:#334e68; outline:none; font-family:'Noto Sans KR',sans-serif; font-size:0.9rem; resize:none; min-height:150px;"></textarea>
+                    <button onclick="saveClassNotice()" style="padding:12px; border:none; border-radius:12px; background:linear-gradient(135deg,#8ec5fc,#e0c3fc); color:#334e68; font-weight:900; cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:0.95rem;">💾 저장하기</button>
+                    <button onclick="clearClassNotice()" style="padding:10px; border:none; border-radius:12px; background:rgba(100,116,139,0.2); color:#546e7a; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem;">✕ 공지 삭제</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⑤ 건의사항 모드 -->
+        <div id="suggest-mode-view" style="flex:1; display:none; flex-direction:column; min-height:0;">
+            <div style="display:flex; gap:12px; flex:1; min-height:0;">
+                <!-- 건의사항 목록 -->
+                <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+                    <div class="section-title">📋 건의사항 목록</div>
+                    <div id="suggest-list" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px;">
+                        <div style="color:#90afc5; font-size:0.88rem;">불러오는 중...</div>
+                    </div>
+                </div>
+                <!-- 작성 영역 -->
+                <div style="width:320px; display:flex; flex-direction:column; gap:10px; flex-shrink:0;">
+                    <div class="section-title">✏️ 새 건의사항</div>
+                    <input type="text" id="suggest-name" placeholder="이름 (선택)" style="border:none; border-radius:10px; padding:10px 12px; background:rgba(255,255,255,0.7); color:#334e68; outline:none; font-family:'Noto Sans KR',sans-serif; font-size:0.9rem;">
+                    <textarea id="suggest-text" placeholder="건의사항을 입력하세요" style="flex:1; border:none; border-radius:10px; padding:12px; background:rgba(255,255,255,0.7); color:#334e68; outline:none; font-family:'Noto Sans KR',sans-serif; font-size:0.9rem; resize:none; min-height:120px;"></textarea>
+                    <button onclick="submitSuggest()" style="padding:12px; border:none; border-radius:12px; background:linear-gradient(135deg,#8ec5fc,#e0c3fc); color:#334e68; font-weight:900; cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:0.95rem;">💾 저장하기</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="settings-view">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <div class="tabs" style="margin:0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px;">
+            <div class="tabs" style="margin:0; display:flex; gap:8px;">
                 <button class="tab-btn active" id="tbtn-class" onclick="switchTab('tab-class','tbtn-class')">🏫 학반 · 학생</button>
                 <button class="tab-btn" id="tbtn-schedule" onclick="switchTab('tab-schedule','tbtn-schedule')">📅 주간 시간표</button>
+                <button class="tab-btn" id="tbtn-timetable" onclick="switchTab('tab-timetable','tbtn-timetable')">⚡ 긴급 시간표</button>
             </div>
-            <button class="btn-back" onclick="showMain()">← 메인으로</button>
+            <div style="display:flex; align-items:center; gap:12px; margin-left:auto;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:0.8rem; font-weight:700; color:#334e68;">🟢 자동 시작</span>
+                    <label style="position:relative; display:inline-block; width:40px; height:22px; cursor:pointer;">
+                        <input type="checkbox" id="toggle-autostart" onchange="toggleAutoStart(this.checked)" style="opacity:0; width:0; height:0; position:absolute;">
+                        <span id="toggle-autostart-track" style="position:absolute; top:0; left:0; right:0; bottom:0; border-radius:22px; background:#ccc; transition:0.3s;">
+                            <span id="toggle-autostart-thumb" style="position:absolute; width:16px; height:16px; border-radius:50%; background:white; top:3px; left:3px; transition:0.3s; box-shadow:0 1px 4px rgba(0,0,0,0.2);"></span>
+                        </span>
+                    </label>
+                </div>
+                <span style="font-size:0.75rem; color:#b0c4d8;">Developed by 인천동양중학교 김호성</span>
+                <button class="btn-back" onclick="showMain()" style="padding:9px 20px; white-space:nowrap;">← 메인으로</button>
+            </div>
         </div>
 
         <div id="tab-class" class="tab-content active">
@@ -292,9 +348,7 @@
             </div>
             <div class="panel">
                 <label>학생 명단 (직접 수정)</label>
-                <select id="sel-count" onchange="renderNameInputs()" style="width:auto; margin-bottom:14px;">
-                    <option value="20">20명</option><option value="25">25명</option><option value="30" selected>30명</option>
-                </select>
+                <input type="number" id="sel-count" value="30" min="1" max="50" onchange="renderNameInputs()" style="width:80px; border:none; border-radius:10px; padding:9px 12px; background:rgba(255,255,255,0.85); color:#333; outline:none; font-family:'Noto Sans KR',sans-serif; font-size:0.93rem; margin-bottom:14px;">명
                 <table class="student-table">
                     <thead><tr><th>번호</th><th>이름</th><th>번호</th><th>이름</th></tr></thead>
                     <tbody id="name-inputs"></tbody>
@@ -319,6 +373,97 @@
                 </table>
             </div>
             <button class="btn-save" onclick="saveSchedule()">📡 주간 시간표 전체 저장 → 알림판 자동 반영</button>
+        </div>
+
+        <div id="tab-timetable" class="tab-content">
+            <div style="background:rgba(255,255,255,0.5); padding:18px; border-radius:15px; border:1px solid rgba(255,255,255,0.6);">
+
+                <!-- 서브탭 -->
+                <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+                    <button id="tt-tab-short" onclick="switchTTTab('short')" style="padding:7px 16px; border:2px solid rgba(255,255,255,0.7); border-radius:30px; cursor:pointer; font-weight:bold; font-family:'Noto Sans KR',sans-serif; font-size:0.85rem; background:rgba(100,180,100,0.6); color:white;">⏱ 단축수업</button>
+                    <button id="tt-tab-swap" onclick="switchTTTab('swap')" style="padding:7px 16px; border:2px solid rgba(255,255,255,0.7); border-radius:30px; cursor:pointer; font-weight:bold; font-family:'Noto Sans KR',sans-serif; font-size:0.85rem; background:rgba(255,255,255,0.4); color:#334e68;">🔄 교시 변경</button>
+                    <span style="align-self:center; font-size:0.78rem; color:#90afc5;">전교 일괄 적용</span>
+                    <button onclick="resetTimetable()" style="margin-left:auto; padding:7px 14px; border:none; border-radius:20px; background:rgba(100,116,139,0.3); color:#334e68; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:0.82rem;">↩ 원래대로</button>
+                </div>
+
+                <!-- 단축수업 패널 -->
+                <div id="tt-short-panel" style="display:block;">
+                    <p style="font-size:0.82rem; color:#90afc5; margin-bottom:10px;">수업시간 0분 = 해당 교시 없음</p>
+                    <div id="short-period-list"></div>
+                    <button onclick="applyShortClass()" style="display:block; width:100%; margin-top:12px; padding:12px; border:none; border-radius:12px; background:linear-gradient(135deg,#ff6b6b,#ee5a24); color:white; font-weight:900; cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:0.92rem;">⚡ 전교 일괄 적용</button>
+                </div>
+
+                <!-- 교시변경 패널 -->
+                <div id="tt-swap-panel" style="display:none; width:100%;">
+                    <table style="width:100%; border-collapse:separate; border-spacing:0 10px;">
+                        <tr>
+                            <td style="padding:8px 0;">
+                                <span style="font-size:0.88rem; color:#334e68; font-weight:700;">오늘 </span>
+                                <select id="swap-from" style="border:none; border-radius:8px; padding:7px 10px; background:rgba(255,255,255,0.85); color:#334e68; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem; outline:none;">
+                                    <option value="1">1교시</option><option value="2">2교시</option><option value="3">3교시</option>
+                                    <option value="4">4교시</option><option value="5">5교시</option><option value="6">6교시</option><option value="7">7교시</option>
+                                </select>
+                                <span style="font-size:0.85rem; color:#607d8b;"> → 아래 중 하나로 교체</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background:rgba(255,255,255,0.65); border-radius:12px; padding:14px;">
+                                <div>
+                                    <input type="radio" name="swap-type" id="swap-type-period" value="period" checked onchange="updateSwapType()" style="margin-right:6px; cursor:pointer;">
+                                    <label for="swap-type-period" style="font-size:0.88rem; font-weight:700; color:#334e68; cursor:pointer;">다른 요일 교시 내용으로</label>
+                                </div>
+                                <div style="padding-left:20px; margin-top:8px;">
+                                    <select id="swap-to-day" style="border:none; border-radius:8px; padding:7px 10px; background:rgba(255,255,255,0.85); color:#334e68; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem; outline:none; margin-right:6px;">
+                                        <option value="1">월요일</option><option value="2">화요일</option><option value="3">수요일</option><option value="4">목요일</option><option value="5">금요일</option>
+                                    </select>
+                                    <select id="swap-to" style="border:none; border-radius:8px; padding:7px 10px; background:rgba(255,255,255,0.85); color:#334e68; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem; outline:none; margin-right:6px;">
+                                        <option value="1">1교시</option><option value="2">2교시</option><option value="3">3교시</option>
+                                        <option value="4">4교시</option><option value="5">5교시</option><option value="6">6교시</option><option value="7">7교시</option>
+                                    </select>
+                                    <span style="font-size:0.82rem; color:#90afc5;">내용으로</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background:rgba(255,255,255,0.65); border-radius:12px; padding:14px;">
+                                <div>
+                                    <input type="radio" name="swap-type" id="swap-type-creative" value="creative" onchange="updateSwapType()" style="margin-right:6px; cursor:pointer;">
+                                    <label for="swap-type-creative" style="font-size:0.88rem; font-weight:700; color:#334e68; cursor:pointer;">창의적체험활동으로</label>
+                                </div>
+                                <div style="padding-left:20px; margin-top:8px;">
+                                    <select id="swap-creative-subject" disabled style="border:none; border-radius:8px; padding:7px 10px; background:rgba(255,255,255,0.85); color:#334e68; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem; outline:none;">
+                                        <option value="자율">자율활동</option><option value="동아리">동아리활동</option>
+                                        <option value="봉사">봉사활동</option><option value="진로">진로활동</option>
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background:rgba(255,255,255,0.65); border-radius:12px; padding:14px;">
+                                <div>
+                                    <input type="checkbox" id="add-7th" onchange="toggleAdd7th(this.checked)" style="margin-right:6px; cursor:pointer;">
+                                    <label for="add-7th" style="font-size:0.88rem; font-weight:700; color:#334e68; cursor:pointer;">7교시 추가</label>
+                                </div>
+                                <div id="add-7th-inputs" style="display:none; padding-left:20px; margin-top:8px;">
+                                    <div style="margin-bottom:8px;">
+                                        <input type="text" id="seventh-subject" placeholder="과목명 (예: 자율, 수학)" style="border:none; border-radius:8px; padding:7px 10px; background:rgba(255,255,255,0.85); color:#334e68; outline:none; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem; width:160px; margin-right:8px;">
+                                        <input type="time" id="seventh-start" value="15:00" style="border:none; border-radius:8px; padding:7px 10px; background:rgba(255,255,255,0.85); color:#334e68; outline:none; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem; margin-right:4px;">
+                                        <span style="color:#90afc5; margin-right:4px;">~</span>
+                                        <input type="time" id="seventh-end" value="15:40" style="border:none; border-radius:8px; padding:7px 10px; background:rgba(255,255,255,0.85); color:#334e68; outline:none; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem;">
+                                    </div>
+                                    <button onclick="applyAdd7th()" style="padding:9px 20px; border:none; border-radius:10px; background:linear-gradient(135deg,#a8edea,#fed6e3); color:#334e68; font-weight:900; cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem;">➕ 7교시 전교 저장</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <button onclick="applySwap()" style="width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg,#8ec5fc,#e0c3fc); color:#334e68; font-weight:900; cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:0.95rem;">🔄 전교 일괄 교체</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
         </div>
     </div>
 </div>
@@ -362,16 +507,31 @@ function switchMode(mode) {
     currentMode = mode;
     document.getElementById('tab-student').className = 'mode-tab' + (mode==='student' ? ' active-student' : '');
     document.getElementById('tab-notice').className = 'mode-tab' + (mode==='notice' ? ' active-notice' : '');
+    document.getElementById('tab-class-notice').className = 'mode-tab' + (mode==='class-notice' ? ' active-notice' : '');
+
+    document.getElementById('tab-suggest').className = 'mode-tab' + (mode==='suggest' ? ' active-student' : '');
     document.getElementById('student-mode-view').style.display = mode==='student' ? 'flex' : 'none';
     document.getElementById('notice-mode-view').style.display = mode==='notice' ? 'flex' : 'none';
+    document.getElementById('class-notice-mode-view').style.display = mode==='class-notice' ? 'flex' : 'none';
+
+    document.getElementById('suggest-mode-view').style.display = mode==='suggest' ? 'flex' : 'none';
 
     if (mode === 'student') {
         document.getElementById('status-bar').textContent = '학생을 선택하고 용무를 골라 호출하세요';
         document.getElementById('status-bar').style.background = 'rgba(255,255,255,0.4)';
-    } else {
+    } else if (mode === 'notice') {
         document.getElementById('status-bar').textContent = '공지 대상과 메시지를 선택하세요';
         document.getElementById('status-bar').style.background = 'rgba(255,200,100,0.15)';
         renderNoticeTargets();
+    } else if (mode === 'class-notice') {
+        document.getElementById('status-bar').textContent = '우리 반 공지사항을 입력하세요';
+        document.getElementById('status-bar').style.background = 'rgba(142,197,252,0.15)';
+        loadClassNotice();
+
+    } else if (mode === 'suggest') {
+        document.getElementById('status-bar').textContent = '사용하신 선생님들께서 불편하신 내용이나, 기능적으로 건의하실 부분이 있으시면 작성해 주세요.';
+        document.getElementById('status-bar').style.background = 'rgba(142,197,252,0.15)';
+        loadSuggestions();
     }
 }
 
@@ -386,42 +546,44 @@ function setScope(scope, btn) {
 // ─── 공지 대상 렌더 ───
 function renderNoticeTargets() {
     const container = document.getElementById('notice-targets');
-    const grade = localStorage.getItem('grade') || '3';
-    const targets = [];
 
-    // 학교 전체
-    targets.push({ label: '🏫 학교 전체 방송', roomId: '__all__' });
-    // 학년별
-    for (const g of ['1','2','3']) {
-        targets.push({ label: `${g}학년 전체`, roomId: `__grade_${g}__` });
-    }
-    // 반별
+    // 학교 전체 버튼
+    let html = `<div style="margin-bottom:10px;">
+        <button class="btn-target" id="nt___all__" onclick="toggleNoticeTarget('__all__','학교 전체',this)"
+            style="width:100%;background:rgba(255,160,50,0.2);border-color:rgba(240,140,30,0.5);font-weight:900;text-align:center;">🏫 학교 전체 방송</button>
+    </div>`;
+
+    // 3열 그리드: 1학년 | 2학년 | 3학년
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">`;
     for (const g of ['1','2','3']) {
         const max = SCHOOL_STRUCTURE[g];
+        html += `<div style="display:flex;flex-direction:column;gap:5px;">`;
+        // 학년 전체
+        html += `<button class="btn-target" id="nt___grade_${g}__"
+            onclick="toggleNoticeTarget('__grade_${g}__','${g}학년 전체',this)"
+            style="text-align:center;font-weight:900;background:rgba(142,197,252,0.2);">${g}학년 전체</button>`;
+        // 반별 세로
         for (let c = 1; c <= max; c++) {
-            targets.push({ label: `${g}학년 ${c}반`, roomId: `${g}-${c}` });
+            html += `<button class="btn-target" id="nt_${g}_${c}"
+                onclick="toggleNoticeTarget('${g}-${c}','${g}학년 ${c}반',this)"
+                style="text-align:center;font-size:0.82rem;">${g}-${c}반</button>`;
         }
+        html += `</div>`;
     }
+    html += `</div>`;
 
-    container.innerHTML = targets.map((t, i) => {
-        const isDivider = i === 0 || i === 1 || i === 4 || i === 7;
-        const divStyle = (t.roomId === '__all__') ? 'background:rgba(255,160,50,0.2);border-color:rgba(240,140,30,0.5);font-weight:900;' : '';
-        return `<button class="btn-target" id="nt-${t.roomId.replace(/__/g,'_')}"
-            onclick="toggleNoticeTarget('${t.roomId}','${t.label}',this)"
-            style="${divStyle}">${t.label}</button>`;
-    }).join('');
+    container.innerHTML = html;
 }
 
 function toggleNoticeTarget(roomId, label, btn) {
-    // 학교전체 선택 시 다른 것 해제
     if (roomId === '__all__') {
         selectedNoticeTargets = [{ roomId, label }];
         document.querySelectorAll('.btn-target').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
     } else {
-        // 학교전체 해제
         selectedNoticeTargets = selectedNoticeTargets.filter(t => t.roomId !== '__all__');
-        document.getElementById('nt___all__')?.classList.remove('selected');
+        const allBtn = document.getElementById('nt___all__');
+        if (allBtn) allBtn.classList.remove('selected');
 
         const idx = selectedNoticeTargets.findIndex(t => t.roomId === roomId);
         if (idx >= 0) { selectedNoticeTargets.splice(idx, 1); btn.classList.remove('selected'); }
@@ -486,12 +648,22 @@ function clearNotice() {
 // ─── 설정 화면 ───
 function showSettings() {
     document.getElementById('main-view').style.display = 'none';
-    document.getElementById('settings-view').style.display = 'flex';
+    document.getElementById('settings-view').style.display = 'block';
     document.getElementById('sel-grade').value = localStorage.getItem('grade') || '3';
     updateClassOptions();
-    document.getElementById('sel-count').value = localStorage.getItem('count') || '30';
-    renderNameInputs();
-    renderScheduleInputs();
+    // updateClassOptions 이후 sel-class 값이 세팅되므로 setTimeout으로 딜레이
+    loadAutoStartState();
+    loadTimetableForEdit();
+    setTimeout(() => {
+        const g = document.getElementById('sel-grade').value;
+        const c = document.getElementById('sel-class').value;
+        renderScheduleInputs();
+        db.ref(`rooms/${g}-${c}/students`).once('value', snap => {
+            const names = snap.val() || [];
+            document.getElementById('sel-count').value = names.length || 30;
+            renderNameInputs(names);
+        });
+    }, 100);
 }
 
 function showMain() {
@@ -521,7 +693,17 @@ function getRoomId() { return `${localStorage.getItem('grade')||'3'}-${localStor
 function updateHeaderRoom() { document.getElementById('header-room').textContent = `${localStorage.getItem('grade')||'3'}학년 ${localStorage.getItem('cls')||'6'}반`; }
 
 function renderNameInputs(names = []) {
-    const count = parseInt(document.getElementById('sel-count').value);
+    // 기존 입력값 보존
+    const existingCount = document.querySelectorAll('#name-inputs input[type=text]').length;
+    if (existingCount > 0 && names.length === 0) {
+        const existing = [];
+        for (let i = 1; i <= existingCount; i++) {
+            const el = document.getElementById(`s${i}`);
+            existing.push(el ? el.value : '');
+        }
+        names = existing;
+    }
+    const count = Math.max(parseInt(document.getElementById('sel-count').value) || 20, names.length);
     let tbody = '';
     const half = Math.ceil(count / 2);
     for (let r = 0; r < half; r++) {
@@ -537,7 +719,8 @@ function loadStudentsFromFirebase() {
     const g = document.getElementById('sel-grade').value, c = document.getElementById('sel-class').value;
     db.ref(`rooms/${g}-${c}/students`).once('value', snap => {
         const names = snap.val() || [];
-        document.getElementById('sel-count').value = Math.min(names.length || 30, 30);
+        const count = Math.min(Math.max(names.length, 20), 40);
+        document.getElementById('sel-count').value = count;
         renderNameInputs(names);
     });
 }
@@ -545,7 +728,12 @@ function loadStudentsFromFirebase() {
 function saveAll() {
     const g = document.getElementById('sel-grade').value, c = document.getElementById('sel-class').value, count = document.getElementById('sel-count').value;
     localStorage.setItem('grade', g); localStorage.setItem('cls', c); localStorage.setItem('count', count);
-    const names = []; for (let i = 1; i <= count; i++) names.push(document.getElementById(`s${i}`).value.trim());
+    const names = [];
+    for (let i = 1; i <= count; i++) {
+        const el = document.getElementById(`s${i}`);
+        names.push(el ? el.value.trim() : '');
+    }
+    if (names.every(n => !n)) { alert('명단이 비어있어 저장하지 않습니다.'); showMain(); return; }
     db.ref(`rooms/${g}-${c}/students`).set(names);
     db.ref(`rooms/${g}-${c}/info`).set({ grade: g, cls: c, count: count });
     showMain();
@@ -701,6 +889,14 @@ function updatePreview() {
 
 function doCall() {
     const err = selectedErrand === '기타' ? document.getElementById('errand-custom-input').value.trim() : selectedErrand;
+    if (!err) { alert('용무를 선택하세요'); return; }
+
+    // 호출 로그 추가
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const names = selectedStudents.map(s => `${s.num}번 ${s.name}`).join(', ');
+    addCallLog(timeStr, names, err);
+
     // 반별로 그룹핑해서 전송
     const byRoom = {};
     selectedStudents.forEach(s => {
@@ -710,13 +906,42 @@ function doCall() {
     Object.entries(byRoom).forEach(([rid, students]) => {
         db.ref(`rooms/${rid}/call`).set({ status: 'calling', students, errand: err, time: Date.now() });
     });
-    selectedStudents.forEach(s => {
-        const b = document.getElementById(`sbtn-${s.uid}`);
-        if (b) { b.classList.remove('selected'); b.classList.add('calling'); }
-    });
-    document.getElementById('status-bar').innerHTML = `📢 호출 중: ${selectedStudents.length}명 — ${err}`;
+
+    document.getElementById('status-bar').innerHTML = `📢 호출 완료: ${names} — ${err}`;
     document.getElementById('status-bar').style.background = 'rgba(255,100,100,0.22)';
-    selectedStudents = []; document.getElementById('selected-count').textContent = '(0명)'; updatePreview();
+
+    // 자동 초기화
+    document.querySelectorAll('.btn-student').forEach(b => b.classList.remove('selected', 'calling'));
+    document.querySelectorAll('.btn-errand').forEach(b => b.classList.remove('selected'));
+    document.getElementById('errand-custom-wrap').style.display = 'none';
+    document.getElementById('errand-custom-input').value = '';
+    selectedStudents = []; selectedErrand = '';
+    document.getElementById('selected-count').textContent = '(0명)';
+    updatePreview();
+}
+
+let callLogs = [];
+
+function addCallLog(time, names, errand) {
+    callLogs.unshift({ time, names, errand });
+    if (callLogs.length > 20) callLogs.pop();
+    renderCallLog();
+}
+
+function renderCallLog() {
+    const list = document.getElementById('call-log-list');
+    if (!list) return;
+    if (callLogs.length === 0) {
+        list.innerHTML = '<div style="font-size:0.78rem; color:#b0c4d8;">아직 호출 내역이 없습니다</div>';
+        return;
+    }
+    list.innerHTML = callLogs.map(log => `
+        <div style="display:flex; gap:8px; align-items:flex-start; background:rgba(255,255,255,0.5); border-radius:8px; padding:5px 10px;">
+            <span style="font-size:0.75rem; color:#90afc5; flex-shrink:0; padding-top:1px;">${log.time}</span>
+            <span style="font-size:0.78rem; color:#334e68; flex:1;">${log.names}</span>
+            <span style="font-size:0.75rem; color:#607d8b; flex-shrink:0;">${log.errand}</span>
+        </div>
+    `).join('');
 }
 
 function clearAll() {
@@ -740,6 +965,355 @@ function clearAll() {
     document.getElementById('status-bar').textContent = '학생을 선택하고 용무를 골라 호출하세요';
     document.getElementById('status-bar').style.background = 'rgba(255,255,255,0.4)';
     updatePreview();
+}
+
+// ─── 우리 반 공지사항 ───
+function loadClassNotice() {
+    const roomId = getRoomId();
+    db.ref(`rooms/${roomId}/classNotice`).once('value', snap => {
+        const data = snap.val();
+        const el = document.getElementById('class-notice-current');
+        const textarea = document.getElementById('class-notice-text');
+        if (data && data.text) {
+            el.textContent = data.text;
+            el.style.color = '#334e68';
+            textarea.value = data.text;
+        } else {
+            el.textContent = '현재 공지사항이 없습니다';
+            el.style.color = '#90afc5';
+            textarea.value = '';
+        }
+    });
+}
+
+function saveClassNotice() {
+    const text = document.getElementById('class-notice-text').value.trim();
+    if (!text) { alert('내용을 입력하세요'); return; }
+    const roomId = getRoomId();
+    db.ref(`rooms/${roomId}/classNotice`).set({ text, time: Date.now() });
+    setTimeout(loadClassNotice, 300);
+    alert('공지사항이 저장되었습니다!');
+}
+
+function clearClassNotice() {
+    if (!confirm('공지사항을 삭제할까요?')) return;
+    const roomId = getRoomId();
+    db.ref(`rooms/${roomId}/classNotice`).remove();
+    document.getElementById('class-notice-text').value = '';
+    setTimeout(loadClassNotice, 300);
+}
+
+// ─── 시간표 긴급변경 ───
+let baseTimetable = {}; // 원본 시간표 저장용
+let currentTTTab = 'short';
+
+function switchTTTab(tab) {
+    currentTTTab = tab;
+    document.getElementById('tt-short-panel').style.display = tab === 'short' ? 'flex' : 'none';
+    document.getElementById('tt-swap-panel').style.display = tab === 'swap' ? 'flex' : 'none';
+    document.getElementById('tt-tab-short').style.background = tab === 'short' ? 'rgba(100,180,100,0.6)' : 'rgba(255,255,255,0.4)';
+    document.getElementById('tt-tab-short').style.color = tab === 'short' ? 'white' : '#334e68';
+    document.getElementById('tt-tab-swap').style.background = tab === 'swap' ? 'rgba(100,180,100,0.6)' : 'rgba(255,255,255,0.4)';
+    document.getElementById('tt-tab-swap').style.color = tab === 'swap' ? 'white' : '#334e68';
+}
+
+function loadTimetableForEdit() {
+    // 현재 반 기준 오늘 시간표 불러오기
+    const roomId = getRoomId();
+    const dayIdx = new Date().getDay() || 1;
+    db.ref(`rooms/${roomId}/schedule/${dayIdx}`).once('value', snap => {
+        const raw = snap.val() || {};
+        const periods = Array.isArray(raw) ? raw : Object.values(raw);
+        baseTimetable[roomId] = periods.filter(p => p && p.period);
+        renderShortPeriodList(baseTimetable[roomId]);
+    });
+}
+
+function renderShortPeriodList(periods) {
+    const container = document.getElementById('short-period-list');
+    if (!periods || periods.length === 0) {
+        container.innerHTML = '<div style="color:#90afc5; font-size:0.88rem;">시간표 데이터가 없습니다. 시간표를 먼저 업로드하세요.</div>';
+        return;
+    }
+    // 기본 수업시간/쉬는시간 계산
+    container.innerHTML = `
+        <div style="display:grid; grid-template-columns:60px 1fr 1fr 1fr; gap:8px; align-items:center; margin-bottom:8px; font-size:0.8rem; font-weight:700; color:#90afc5;">
+            <span>교시</span><span>과목</span><span>수업시간(분)</span><span>쉬는시간(분)</span>
+        </div>
+        ${periods.map((p, i) => {
+            const [sh, sm] = (p.s || '00:00').split(':').map(Number);
+            const [eh, em] = (p.e || '00:00').split(':').map(Number);
+            const classMins = (eh * 60 + em) - (sh * 60 + sm);
+            return `<div style="display:grid; grid-template-columns:60px 1fr 1fr 1fr; gap:8px; align-items:center; margin-bottom:6px;">
+                <span style="font-size:0.88rem; font-weight:700; color:#334e68;">${p.period}교시</span>
+                <span style="font-size:0.88rem; color:#607d8b;">${p.subject || '—'}</span>
+                <input type="number" id="short-class-${i}" value="${classMins}" min="0" max="120"
+                    style="border:none; border-radius:8px; padding:7px 10px; background:rgba(255,255,255,0.85); color:#334e68; outline:none; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem; text-align:center;">
+                <input type="number" id="short-break-${i}" value="10" min="0" max="60"
+                    style="border:none; border-radius:8px; padding:7px 10px; background:rgba(255,255,255,0.85); color:#334e68; outline:none; font-family:'Noto Sans KR',sans-serif; font-size:0.88rem; text-align:center;">
+            </div>`;
+        }).join('')}
+    `;
+}
+
+function applyShortClass() {
+    const roomId = getRoomId();
+    const dayIdx = new Date().getDay() || 1;
+    const periods = baseTimetable[roomId] || [];
+
+    if (periods.length === 0) { alert('시간표 데이터가 없습니다.'); return; }
+    if (!confirm('전교 모든 반에 단축수업을 적용합니다. 계속할까요?')) return;
+
+    // 새 시간표 계산
+    let currentTime = periods[0] ? periods[0].s : '08:50';
+    const newPeriods = [];
+
+    periods.forEach((p, i) => {
+        const classMins = parseInt(document.getElementById(`short-class-${i}`)?.value || 0);
+        const breakMins = parseInt(document.getElementById(`short-break-${i}`)?.value || 0);
+
+        if (classMins === 0) return; // 0분이면 해당 교시 스킵
+
+        const [sh, sm] = currentTime.split(':').map(Number);
+        const endTotal = sh * 60 + sm + classMins;
+        const eh = Math.floor(endTotal / 60), em = endTotal % 60;
+        const endTime = `${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}`;
+
+        newPeriods.push({ period: newPeriods.length + 1, s: currentTime, e: endTime, subject: p.subject || '' });
+
+        const nextTotal = endTotal + breakMins;
+        const nh = Math.floor(nextTotal / 60), nm = nextTotal % 60;
+        currentTime = `${String(nh).padStart(2,'0')}:${String(nm).padStart(2,'0')}`;
+    });
+
+    // 전교 모든 반에 적용
+    const allRooms = [];
+    for (const g of ['1','2','3']) {
+        for (let c = 1; c <= SCHOOL_STRUCTURE[g]; c++) allRooms.push(`${g}-${c}`);
+    }
+
+    const updates = {};
+    allRooms.forEach(rid => {
+        newPeriods.forEach((p, i) => { updates[`rooms/${rid}/schedule/${dayIdx}/${i}`] = p; });
+    });
+
+    db.ref().update(updates).then(() => {
+        alert(`단축수업 적용 완료! ${newPeriods.length}교시로 변경되었습니다.`);
+    });
+}
+
+function updateSwapType() {
+    const isPeriod = document.getElementById('swap-type-period').checked;
+    const creativeSelect = document.getElementById('swap-creative-subject');
+    const todaySelect = document.getElementById('swap-to-day');
+    const toSelect = document.getElementById('swap-to');
+    if (creativeSelect) creativeSelect.disabled = isPeriod;
+    if (todaySelect) todaySelect.disabled = !isPeriod;
+    if (toSelect) toSelect.disabled = !isPeriod;
+}
+
+function toggleAdd7th(checked) {
+    const inputs = document.getElementById('add-7th-inputs');
+    inputs.style.display = checked ? 'block' : 'none';
+}
+
+function applyAdd7th() {
+    const subj = document.getElementById('seventh-subject').value.trim() || '자율';
+    const startTime = document.getElementById('seventh-start').value || '15:00';
+    const endTime = document.getElementById('seventh-end').value || '15:40';
+    const todayIdx = new Date().getDay() || 1;
+    if (!confirm('전교 모든 반에 7교시(' + subj + ' ' + startTime + '~' + endTime + ')를 추가합니다. 계속할까요?')) return;
+    const allRooms = [];
+    for (const g of ['1','2','3']) {
+        for (let c = 1; c <= SCHOOL_STRUCTURE[g]; c++) allRooms.push(g + '-' + c);
+    }
+    let done = 0;
+    allRooms.forEach(rid => {
+        db.ref('rooms/' + rid + '/schedule/' + todayIdx).once('value', snap => {
+            const raw = snap.val() || {};
+            const periods = Array.isArray(raw) ? [...raw] : Object.values(raw);
+            const has7 = periods.find(p => p && p.period === 7);
+            if (!has7) periods.push({ period: 7, subject: subj, s: startTime, e: endTime });
+            else {
+                const idx = periods.indexOf(has7);
+                periods[idx] = { period: 7, subject: subj, s: startTime, e: endTime };
+            }
+            const updates = {};
+            periods.forEach((p, i) => { if (p) updates[i] = p; });
+            db.ref('rooms/' + rid + '/schedule/' + todayIdx).set(updates);
+            done++;
+            if (done === allRooms.length) alert('7교시 저장 완료!');
+        });
+    });
+}
+
+function applySwap() {
+    const from = parseInt(document.getElementById('swap-from').value);
+    const todayIdx = new Date().getDay() || 1;
+    const DAY_NAMES = ['','월','화','수','목','금'];
+    const swapType = document.querySelector('input[name="swap-type"]:checked').value;
+    const add7th = document.getElementById('add-7th').checked;
+
+    let confirmMsg = '';
+    if (swapType === 'period') {
+        const toDay = parseInt(document.getElementById('swap-to-day').value);
+        const to = parseInt(document.getElementById('swap-to').value);
+        confirmMsg = `전교 모든 반의 오늘 ${from}교시를 ${DAY_NAMES[toDay]}요일 ${to}교시 내용으로 교체합니다.`;
+    } else {
+        const creative = document.getElementById('swap-creative-subject').value;
+        confirmMsg = `전교 모든 반의 오늘 ${from}교시를 '${creative}'로 교체합니다.`;
+    }
+    if (add7th) {
+        const subj = document.getElementById('seventh-subject').value.trim() || '자율';
+        confirmMsg += ' + 7교시(' + subj + ') 추가';
+    }
+    if (!confirm(confirmMsg + ' 계속할까요?')) return;
+
+    const allRooms = [];
+    for (const g of ['1','2','3']) {
+        for (let c = 1; c <= SCHOOL_STRUCTURE[g]; c++) allRooms.push(`${g}-${c}`);
+    }
+
+    let done = 0;
+    allRooms.forEach(rid => {
+        db.ref(`rooms/${rid}/schedule/${todayIdx}`).once('value').then(todaySnap => {
+            const todayRaw = todaySnap.val() || {};
+            const todayPeriods = Array.isArray(todayRaw) ? [...todayRaw] : Object.values(todayRaw);
+
+            const fromPeriod = todayPeriods.find(p => p && p.period === from);
+
+            if (swapType === 'period') {
+                const toDay = parseInt(document.getElementById('swap-to-day').value);
+                const to = parseInt(document.getElementById('swap-to').value);
+                db.ref(`rooms/${rid}/schedule/${toDay}`).once('value').then(targetSnap => {
+                    const targetRaw = targetSnap.val() || {};
+                    const targetPeriods = Array.isArray(targetRaw) ? [...targetRaw] : Object.values(targetRaw);
+                    const toPeriod = targetPeriods.find(p => p && p.period === to);
+                    if (fromPeriod && toPeriod) {
+                        const idx = todayPeriods.indexOf(fromPeriod);
+                        todayPeriods[idx] = { ...fromPeriod, subject: toPeriod.subject };
+                    }
+                    saveUpdatedPeriods(rid, todayIdx, todayPeriods, add7th, ++done, allRooms.length);
+                });
+            } else {
+                const creative = document.getElementById('swap-creative-subject').value;
+                if (fromPeriod) {
+                    const idx = todayPeriods.indexOf(fromPeriod);
+                    todayPeriods[idx] = { ...fromPeriod, subject: creative };
+                }
+                saveUpdatedPeriods(rid, todayIdx, todayPeriods, add7th, ++done, allRooms.length);
+            }
+        });
+    });
+}
+
+function saveUpdatedPeriods(rid, dayIdx, periods, add7th, done, total) {
+    if (add7th) {
+        const subj = document.getElementById('seventh-subject').value.trim() || '자율';
+        const startTime = document.getElementById('seventh-start').value || '14:10';
+        const endTime = document.getElementById('seventh-end').value || '15:00';
+        const existing7 = periods.find(p => p && p.period === 7);
+        if (!existing7) {
+            periods.push({ period: 7, subject: subj, s: startTime, e: endTime });
+        }
+    }
+    const updates = {};
+    periods.forEach((p, i) => { if (p) updates[i] = p; });
+    db.ref(`rooms/${rid}/schedule/${dayIdx}`).set(updates);
+    if (done === total) alert('교시 변경 적용 완료!');
+}
+
+function resetTimetable() {
+    if (!confirm('전교 모든 반의 시간표를 원래대로 되돌립니다. 계속할까요?')) return;
+
+    const allRooms = [];
+    for (const g of ['1','2','3']) {
+        for (let c = 1; c <= SCHOOL_STRUCTURE[g]; c++) allRooms.push(`${g}-${c}`);
+    }
+
+    // 백업에서 복원
+    let done = 0, fail = 0;
+    allRooms.forEach(rid => {
+        db.ref(`backup/schedule/${rid}`).once('value', snap => {
+            const backup = snap.val();
+            if (backup) {
+                db.ref(`rooms/${rid}/schedule`).set(backup);
+            } else {
+                fail++;
+            }
+            done++;
+            if (done === allRooms.length) {
+                if (fail > 0) {
+                    alert(`복원 완료! (${fail}개 반은 백업 데이터가 없어 건너뜀)
+백업이 없는 경우 upload_schedule.html을 다시 실행해주세요.`);
+                } else {
+                    alert('전교 시간표가 원래대로 복원되었습니다!');
+                }
+            }
+        });
+    });
+}
+
+// ─── 자동 시작 등록 ───
+function toggleAutoStart(enabled) {
+    const track = document.getElementById("toggle-autostart-track");
+    const thumb = document.getElementById("toggle-autostart-thumb");
+    if (track) track.style.background = enabled ? '#4CAF50' : '#ccc';
+    if (thumb) thumb.style.left = enabled ? '21px' : '3px';
+    if (window.electronAPI && window.electronAPI.setAutoStart) {
+        window.electronAPI.setAutoStart(enabled);
+    } else {
+        // Electron 아닐 때 체크박스만 토글 (테스트용)
+        const cb = document.getElementById('toggle-autostart');
+        if (cb) cb.checked = enabled;
+    }
+}
+
+// 설정 열 때 자동시작 상태 불러오기
+function loadAutoStartState() {
+    if (window.electronAPI && window.electronAPI.getAutoStart) {
+        window.electronAPI.getAutoStart().then(enabled => {
+            const cb = document.getElementById("toggle-autostart");
+            const track = document.getElementById("toggle-autostart-track");
+            const thumb = document.getElementById("toggle-autostart-thumb");
+            if (cb) cb.checked = enabled;
+            if (track) track.style.background = enabled ? "#4CAF50" : "#ccc";
+            if (thumb) thumb.style.left = enabled ? "21px" : "3px";
+        }).catch(() => {});
+    }
+}
+
+// ─── 건의사항 ───
+function loadSuggestions() {
+    db.ref('suggestions').orderByChild('time').limitToLast(50).once('value', snap => {
+        const container = document.getElementById('suggest-list');
+        const data = snap.val();
+        if (!data) {
+            container.innerHTML = '<div style="color:#90afc5; font-size:0.88rem;">아직 건의사항이 없습니다</div>';
+            return;
+        }
+        const items = Object.entries(data).reverse();
+        container.innerHTML = items.map(([key, item]) => `
+            <div style="background:rgba(255,255,255,0.6); border-radius:12px; padding:12px 14px; border:1px solid rgba(255,255,255,0.8);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="font-weight:700; color:#334e68; font-size:0.88rem;">${item.name || '익명'}</span>
+                    <span style="font-size:0.75rem; color:#90afc5;">${new Date(item.time).toLocaleDateString('ko-KR')} ${new Date(item.time).toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'})}</span>
+                </div>
+                <div style="font-size:0.9rem; color:#455a64; line-height:1.5;">${item.text}</div>
+            </div>
+        `).join('');
+    });
+}
+
+function submitSuggest() {
+    const name = document.getElementById('suggest-name').value.trim();
+    const text = document.getElementById('suggest-text').value.trim();
+    if (!text) { alert('내용을 입력하세요'); return; }
+    db.ref('suggestions').push({ name: name || '익명', text, time: Date.now() });
+    document.getElementById('suggest-name').value = '';
+    document.getElementById('suggest-text').value = '';
+    setTimeout(loadSuggestions, 500);
+    alert('건의사항이 저장되었습니다!');
 }
 
 function listenCallStatus() {
