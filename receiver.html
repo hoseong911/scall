@@ -376,6 +376,8 @@ const db = firebase.database();
 const SCHOOL_STRUCTURE = { "1": 5, "2": 6, "3": 6 };
 let roomId = localStorage.getItem("rcv-room") || "";
 let callListenerRef = null, scheduleListenerRef = null;
+let fullWeeklySchedule = {};
+let todaySchedule = [];
 
 let noticeListenerRef = null;
 let soundOffTimer = null, alertTimer = null;
